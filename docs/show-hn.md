@@ -25,7 +25,7 @@ The repo includes a spreadsheet example where a workflow adds a summary row. It 
 
 The agent does not invent this behavior. The manifest defines it, the executor follows it.
 
-This is not just a schema file. The repo has four enforcement layers:
+This is not just a schema file. The repo has four layers of validation:
 
 1. JSON Schema validation for manifest structure
 2. A semantic linter for things the schema cannot express (transition targets, revision-tracking consistency, reference resolution)
@@ -34,7 +34,7 @@ This is not just a schema file. The repo has four enforcement layers:
 
 The outcome schema survived both adapters without modification, which is why it was formalized.
 
-There is also a live Google Sheets adapter that runs the same workflow against a real spreadsheet via the Sheets and Drive APIs. The captured live runs are committed in the repo:
+The repo also includes a live Google Sheets adapter — same manifest, same executor, real Sheets and Drive APIs. The captured live runs are committed in the repo:
 
 - Happy path: https://github.com/ericorr/anac-spec/blob/main/docs/traces/google-sheets-live-happy-20260309T212638Z.json
 - Forced-stale live run: https://github.com/ericorr/anac-spec/blob/main/docs/traces/google-sheets-live-stale-recovered-20260309T212715Z.json
@@ -55,9 +55,9 @@ What ANAC is not: it is not MCP (MCP handles discovery and invocation; ANAC is t
 
 The rough shape is MxN -> M+N: applications publish one behavioral surface, multiple orchestrators consume it.
 
-Current limitations are explicit: CEL conditions are scope-checked but not grammar-validated, the demo auto-approves confirm steps, rollback semantics are not yet specified, and the live adapter uses spreadsheet-wide revision tracking rather than per-range.
+Known limitations: CEL conditions are scope-checked but not grammar-validated. The demo auto-approves confirm steps. Rollback semantics are not yet specified. The live adapter uses spreadsheet-wide revision tracking, not per-range.
 
-If the core idea is wrong, the interesting attack is not "why not just use tools." The harder question is whether application vendors will expose behavioral semantics at all. That is the adoption risk.
+If the core idea is wrong, the interesting attack is not "why not just use tools." The harder question is whether application vendors will expose behavioral semantics at all.
 
 If the core idea is right, the main gap in agent infrastructure is not smarter prompting. It is a better contract between the agent and the application.
 
