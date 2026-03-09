@@ -125,13 +125,16 @@ class LiveGoogleSheetsAdapter(BaseDemoAdapter):
         drive = self.ensure_services().drive
         file_meta = drive.files().get(
             fileId=self.spreadsheet_id,
-            fields="id,name,modifiedTime",
+            fields="id,name,modifiedTime,version",
             supportsAllDrives=True,
         ).execute()
+        version = file_meta.get("version")
+        if version:
+            return f"v{version}"
         modified = file_meta.get("modifiedTime")
-        if not modified:
-            raise RuntimeError("Drive file metadata did not include modifiedTime")
-        return modified
+        if modified:
+            return modified
+        raise RuntimeError("Drive file metadata did not include version or modifiedTime")
 
     def _values(self, a1_range: str, *, value_render_option: str = "FORMULA") -> list[list[Any]]:
         sheets = self.ensure_services().sheets
@@ -308,7 +311,7 @@ class LiveGoogleSheetsAdapter(BaseDemoAdapter):
             "warnings": [
                 {
                     "severity": "info",
-                    "message": "Live adapter uses Drive modifiedTime as a coarse spreadsheet revision.",
+                    "message": "Live adapter uses Drive version, falling back to modifiedTime, as a coarse spreadsheet revision.",
                     "related_entity": {
                         "entity_type": sheet_snapshot["entity_type"],
                         "ref": sheet_snapshot["ref"],
