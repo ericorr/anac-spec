@@ -6,6 +6,7 @@ This repository contains three things:
 
 - the normative draft: [`ANAC-0.1.2.md`](ANAC-0.1.2.md)
 - the builder-facing overview: [`docs/positioning.md`](docs/positioning.md)
+- the launch-facing draft: [`docs/show-hn.md`](docs/show-hn.md)
 - the first live-adapter path: [`docs/google-sheets-live.md`](docs/google-sheets-live.md)
 - the place to store credentialed live traces: [`docs/traces/`](docs/traces)
 - machine-validatable schemas for the static and runtime payloads in [`schema/`](schema)
