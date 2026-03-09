@@ -6,6 +6,7 @@ This repository contains three things:
 
 - the normative draft: [`ANAC-0.1.2.md`](ANAC-0.1.2.md)
 - the builder-facing overview: [`docs/positioning.md`](docs/positioning.md)
+- the first live-adapter path: [`docs/google-sheets-live.md`](docs/google-sheets-live.md)
 - machine-validatable schemas for the static and runtime payloads in [`schema/`](schema)
 - executable examples plus validation tooling in [`examples/`](examples) and [`scripts/`](scripts)
 
@@ -53,6 +54,12 @@ python3 scripts/anac_lint.py --strict examples/*.json
 python3 scripts/validate_runtime_demo.py
 ```
 
+Optional live-adapter dependencies:
+
+```bash
+python3 -m pip install -r requirements-google-live.txt
+```
+
 Run the CI-equivalent entry points individually:
 
 ```bash
@@ -64,6 +71,7 @@ python3 scripts/anac_runtime_demo.py --manifest examples/example-vectorforge-0.1
 
 - [`ANAC-0.1.2.md`](ANAC-0.1.2.md): current normative draft
 - [`docs/positioning.md`](docs/positioning.md): builder-facing positioning document
+- [`docs/google-sheets-live.md`](docs/google-sheets-live.md): setup and usage for the first live adapter
 - [`schema/anac-core-0.1.2.schema.json`](schema/anac-core-0.1.2.schema.json): static manifest schema
 - [`schema/anac-context-frame-0.1.2.schema.json`](schema/anac-context-frame-0.1.2.schema.json): runtime `context_frame` schema
 - [`schema/anac-action-result-0.1.2.schema.json`](schema/anac-action-result-0.1.2.schema.json): runtime `action_result` schema
@@ -73,7 +81,9 @@ python3 scripts/anac_runtime_demo.py --manifest examples/example-vectorforge-0.1
 - [`examples/validate_examples.py`](examples/validate_examples.py): static schema validation
 - [`scripts/anac_lint.py`](scripts/anac_lint.py): semantic linting
 - [`scripts/anac_runtime_demo.py`](scripts/anac_runtime_demo.py): toy runtime executor with mock adapters
+- [`scripts/anac_google_sheets_live.py`](scripts/anac_google_sheets_live.py): experimental live Google Sheets adapter for `SheetApp`
 - [`scripts/validate_runtime_demo.py`](scripts/validate_runtime_demo.py): runtime validation and scenario checks
+- [`requirements-google-live.txt`](requirements-google-live.txt): optional dependencies for the live adapter
 - [`.github/workflows/validate-anac.yml`](.github/workflows/validate-anac.yml): CI workflow
 
 ## Runtime Contract
