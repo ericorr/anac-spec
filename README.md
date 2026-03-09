@@ -8,6 +8,7 @@ This repository contains three things:
 - the `0.2` restructuring plan: [`docs/anac-0.2-plan.md`](docs/anac-0.2-plan.md)
 - the runtime-only external-test draft: [`docs/specs/runtime.md`](docs/specs/runtime.md)
 - the runtime feedback note: [`docs/runtime-feedback-note.md`](docs/runtime-feedback-note.md)
+- the outbound feedback formats: [`docs/outbound-feedback-formats.md`](docs/outbound-feedback-formats.md)
 - the builder-facing overview: [`docs/positioning.md`](docs/positioning.md)
 - the launch-facing draft: [`docs/show-hn.md`](docs/show-hn.md)
 - the launch variants: [`docs/launch/`](docs/launch)
