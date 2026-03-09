@@ -72,7 +72,7 @@ It does not yet do full CEL parsing or runtime simulation.
 
 ## Toy Runtime Executor
 
-There is also a minimal runtime scaffold for the bundled spreadsheet example:
+There is also a minimal runtime scaffold that can execute the bundled `SheetApp` and `VectorForge` manifests against in-memory adapters:
 
 ```bash
 python3 scripts/anac_runtime_demo.py
@@ -80,8 +80,8 @@ python3 scripts/anac_runtime_demo.py
 
 This does three things:
 
-- loads the `SheetApp` manifest
-- runs the `add_summary_row` workflow against an in-memory mock adapter
+- loads a bundled manifest
+- runs the requested workflow against an in-memory mock adapter
 - prints a trace containing resolved inputs, step emissions, transitions, and action results
 
 The executor is intentionally small and incomplete. Its main purpose is to surface runtime contract needs empirically, especially:
@@ -95,12 +95,17 @@ The current demo supports enough CEL to run the bundled example, not the full la
 The runtime payload now includes a top-level `outcome` object with:
 
 - `status`: coarse terminal status (`success` or `failure` in the current demo)
-- `disposition`: terminal mode such as `completed`, `completed_after_retry`, or `failed_retry_exhausted`
+- `disposition`: terminal mode such as `completed`, `completed_after_retry`, `failed_retry_exhausted`, or `failed_non_retryable`
 - `reason`: why the workflow stopped
 - `terminal_step` and `terminal_transition`
 - `last_error_code`
 - `context_refresh_count`
 - `stale_retry_count`
+
+There is also a top-level `artifacts` object carrying adapter-specific end-state summaries:
+
+- `SheetApp`: `summary_row`
+- `VectorForge`: `published_refs`, `group_position`, `applied_tokens`, `export_job`
 
 Force a deterministic stale-revision recovery path:
 
@@ -114,13 +119,34 @@ Force a deterministic stale-revision exhaustion path that exceeds `max_context_r
 python3 scripts/anac_runtime_demo.py --force-stale-step insert_summary_row --force-stale-count 2
 ```
 
-Validate the happy-path and stale-path runtime payloads against the draft runtime schemas:
+Run the `VectorForge` happy path:
+
+```bash
+python3 scripts/anac_runtime_demo.py --manifest examples/example-vectorforge-0.1.2.json --workflow refresh_accessible_asset
+```
+
+Run the `VectorForge` non-retryable failure path by removing publish permission:
+
+```bash
+python3 scripts/anac_runtime_demo.py --manifest examples/example-vectorforge-0.1.2.json --workflow refresh_accessible_asset --deny-permission asset.publish
+```
+
+Validate the runtime payloads against the draft runtime schemas:
 
 ```bash
 python3 scripts/validate_runtime_demo.py
 ```
 
+The runtime validator now covers five scenarios:
+
+- `SheetApp` happy path
+- `SheetApp` recovered stale revision
+- `SheetApp` exhausted stale revision retries
+- `VectorForge` happy path
+- `VectorForge` non-retryable `PERMISSION_DENIED` failure
+
 ## Notes
 
 - This repo currently emphasizes the normative/spec side, not the higher-level position paper.
+- The `outcome` object remains executor-derived metadata rather than a formal schema. The second adapter is there to test whether the current shape generalizes before formalizing it.
 - Research citations from earlier drafts still need a separate verification pass before wider circulation.
