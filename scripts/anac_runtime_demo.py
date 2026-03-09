@@ -656,23 +656,34 @@ class MockSheetAppAdapter:
     def _last_used_row(self) -> int:
         return max(self._row_number(address) for address in self.cells)
 
-    def summary_row_snapshot(self) -> dict[str, Any]:
-        row = self._last_used_row()
+    def summary_row_snapshot(self, row: int | None = None) -> dict[str, Any]:
+        if row is None:
+            return {}
         return {
             f"{column}{row}": copy.deepcopy(self.cells[f"{column}{row}"]["data"])
             for column in "ABCDEF"
+            if f"{column}{row}" in self.cells
         }
 
 
 class WorkflowExecutor:
     """Tiny state-machine executor for the bundled demo manifest."""
 
-    def __init__(self, manifest: dict[str, Any], adapter: MockSheetAppAdapter, force_stale_step: str | None = None) -> None:
+    def __init__(
+        self,
+        manifest: dict[str, Any],
+        adapter: MockSheetAppAdapter,
+        force_stale_step: str | None = None,
+        force_stale_count: int = 1,
+    ) -> None:
         self.manifest = manifest
         self.adapter = adapter
         self.actions = {action["id"]: action for action in manifest["static"]["actions"]}
         self.force_stale_step = force_stale_step
-        self._forced_once: set[str] = set()
+        self.force_stale_count = max(force_stale_count, 0)
+        self._forced_remaining: dict[str, int] = {}
+        if self.force_stale_step and self.force_stale_count:
+            self._forced_remaining[self.force_stale_step] = self.force_stale_count
 
     def run(self, workflow_id: str) -> dict[str, Any]:
         workflow = next(item for item in self.manifest["static"]["workflows"] if item["id"] == workflow_id)
@@ -694,12 +705,14 @@ class WorkflowExecutor:
             inputs={},
             current=None,
         )
+        summary_row_number = outcome["outputs"].get("insert_summary_row", {}).get("summary_row_number")
         return {
             "workflow_id": workflow_id,
             "status": outcome["status"],
+            "outcome": outcome["outcome"],
             "trace": outcome["trace"],
             "final_context_frame": outcome["context_frame"],
-            "summary_row": self.adapter.summary_row_snapshot(),
+            "summary_row": self.adapter.summary_row_snapshot(summary_row_number) if summary_row_number else None,
         }
 
     def _run_step_machine(
@@ -716,6 +729,16 @@ class WorkflowExecutor:
         step_order = list(step_map.keys())
         step_id = workflow["entry_point"]
         terminal_status = "success"
+        outcome_info: dict[str, Any] = {
+            "status": None,
+            "disposition": None,
+            "reason": None,
+            "terminal_step": None,
+            "terminal_transition": None,
+            "last_error_code": None,
+            "context_refresh_count": 0,
+            "stale_retry_count": 0,
+        }
 
         while step_id != "end":
             step = step_map[step_id]
@@ -747,9 +770,9 @@ class WorkflowExecutor:
 
             elif step["kind"] == "mutate":
                 simulated_event = None
-                if self.force_stale_step == step_id and step_id not in self._forced_once:
+                if self._forced_remaining.get(step_id, 0) > 0:
                     simulated_event = self.adapter.simulate_external_change(step_id, resolved_expected)
-                    self._forced_once.add(step_id)
+                    self._forced_remaining[step_id] -= 1
                 execution = self.adapter.invoke_action(step_id, step["action"], resolved_inputs, resolved_expected, context_frame)
                 step_result = execution.result
                 local_outputs[step_id] = {
@@ -759,10 +782,23 @@ class WorkflowExecutor:
                 if step_result["status"] == "failure" and step_result["error"]["code"] == "STALE_REVISION":
                     transition = "stale_revision"
                     runtime["context_refresh_count"] += 1
+                    outcome_info["last_error_code"] = "STALE_REVISION"
+                    outcome_info["stale_retry_count"] = runtime["context_refresh_count"]
                     terminal_status = "stale_revision"
                 elif step_result["status"] == "failure":
                     transition = "failure"
                     terminal_status = "failure"
+                    if outcome_info["disposition"] is None:
+                        outcome_info.update(
+                            {
+                                "status": "failure",
+                                "disposition": "failed_non_retryable",
+                                "reason": "action_failure",
+                                "terminal_step": step_id,
+                                "terminal_transition": transition,
+                                "last_error_code": step_result["error"]["code"],
+                            }
+                        )
                 else:
                     transition = "success"
                     terminal_status = step_result["status"]
@@ -832,10 +868,37 @@ class WorkflowExecutor:
                     "next_step": next_step,
                 }
             )
+
+            if step["kind"] == "observe" and step_id == "refresh_context" and transition == "failure" and outcome_info["disposition"] is None:
+                outcome_info.update(
+                    {
+                        "status": "failure",
+                        "disposition": "failed_retry_exhausted",
+                        "reason": "max_context_refreshes_exceeded",
+                        "terminal_step": step_id,
+                        "terminal_transition": transition,
+                        "last_error_code": outcome_info["last_error_code"] or "STALE_REVISION",
+                    }
+                )
+                terminal_status = "failure"
             step_id = next_step
 
+        if outcome_info["disposition"] is None:
+            recovered = runtime["context_refresh_count"] > 0
+            outcome_info.update(
+                {
+                    "status": "success" if terminal_status != "failure" else terminal_status,
+                    "disposition": "completed_after_retry" if recovered else "completed",
+                    "reason": "workflow_reached_end_after_retry" if recovered else "workflow_reached_end",
+                    "terminal_step": trace[-1]["step_id"] if trace else workflow["entry_point"],
+                    "terminal_transition": trace[-1]["transition"] if trace else None,
+                }
+            )
+        outcome_info["context_refresh_count"] = runtime["context_refresh_count"]
+
         return {
-            "status": terminal_status,
+            "status": outcome_info["status"],
+            "outcome": outcome_info,
             "trace": trace,
             "context_frame": context_frame,
             "outputs": local_outputs,
@@ -872,6 +935,12 @@ def parse_args() -> argparse.Namespace:
         "--force-stale-step",
         help="Inject one concurrent external edit before the named mutate step executes",
     )
+    parser.add_argument(
+        "--force-stale-count",
+        type=int,
+        default=1,
+        help="How many times to inject a concurrent external edit before the named step executes",
+    )
     return parser.parse_args()
 
 
@@ -879,7 +948,12 @@ def main() -> int:
     args = parse_args()
     manifest = load_manifest(Path(args.manifest))
     adapter = MockSheetAppAdapter()
-    executor = WorkflowExecutor(manifest, adapter, force_stale_step=args.force_stale_step)
+    executor = WorkflowExecutor(
+        manifest,
+        adapter,
+        force_stale_step=args.force_stale_step,
+        force_stale_count=args.force_stale_count,
+    )
     result = executor.run(args.workflow)
     payload = result["trace"] if args.trace_only else result
     json.dump(payload, sys.stdout, indent=2)

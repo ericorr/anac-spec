@@ -92,10 +92,26 @@ The executor is intentionally small and incomplete. Its main purpose is to surfa
 
 The current demo supports enough CEL to run the bundled example, not the full language.
 
+The runtime payload now includes a top-level `outcome` object with:
+
+- `status`: coarse terminal status (`success` or `failure` in the current demo)
+- `disposition`: terminal mode such as `completed`, `completed_after_retry`, or `failed_retry_exhausted`
+- `reason`: why the workflow stopped
+- `terminal_step` and `terminal_transition`
+- `last_error_code`
+- `context_refresh_count`
+- `stale_retry_count`
+
 Force a deterministic stale-revision recovery path:
 
 ```bash
-python3 scripts/anac_runtime_demo.py --force-stale-step insert_summary_row
+python3 scripts/anac_runtime_demo.py --force-stale-step insert_summary_row --force-stale-count 1
+```
+
+Force a deterministic stale-revision exhaustion path that exceeds `max_context_refreshes`:
+
+```bash
+python3 scripts/anac_runtime_demo.py --force-stale-step insert_summary_row --force-stale-count 2
 ```
 
 Validate the happy-path and stale-path runtime payloads against the draft runtime schemas:
