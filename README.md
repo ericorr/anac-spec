@@ -67,6 +67,28 @@ The linter currently checks:
 
 It does not yet do full CEL parsing or runtime simulation.
 
+## Toy Runtime Executor
+
+There is also a minimal runtime scaffold for the bundled spreadsheet example:
+
+```bash
+python3 scripts/anac_runtime_demo.py
+```
+
+This does three things:
+
+- loads the `SheetApp` manifest
+- runs the `add_summary_row` workflow against an in-memory mock adapter
+- prints a trace containing resolved inputs, step emissions, transitions, and action results
+
+The executor is intentionally small and incomplete. Its main purpose is to surface runtime contract needs empirically, especially:
+
+- how `observe` steps populate `emits`
+- what `context_frame` shape the orchestrator actually needs
+- how optimistic concurrency affects action calls and results
+
+The current demo supports enough CEL to run the bundled example, not the full language.
+
 ## Notes
 
 - This repo currently emphasizes the normative/spec side, not the higher-level position paper.
