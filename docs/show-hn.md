@@ -1,10 +1,4 @@
-# Show HN Draft
-
-Suggested title:
-
-`Show HN: ANAC – A behavioral contract for AI agents that use real software`
-
-Draft text:
+Show HN: ANAC – A behavioral contract for AI agents that use real software
 
 AI agents can call tools. They still struggle to use software.
 
