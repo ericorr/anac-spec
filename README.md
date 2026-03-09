@@ -5,6 +5,7 @@ ANAC is a working draft for an agent-facing application contract: a static manif
 This repository contains three things:
 
 - the normative draft: [`ANAC-0.1.2.md`](ANAC-0.1.2.md)
+- the `0.2` restructuring plan: [`docs/anac-0.2-plan.md`](docs/anac-0.2-plan.md)
 - the builder-facing overview: [`docs/positioning.md`](docs/positioning.md)
 - the launch-facing draft: [`docs/show-hn.md`](docs/show-hn.md)
 - the launch variants: [`docs/launch/`](docs/launch)
