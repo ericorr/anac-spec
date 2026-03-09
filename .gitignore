@@ -2,3 +2,4 @@
 tmp/
 examples/files.zip
 __pycache__/
+secrets/

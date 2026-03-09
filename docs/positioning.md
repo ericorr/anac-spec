@@ -154,7 +154,7 @@ The runtime currently exercises two adapters and five scenarios:
 
 That matters because the `outcome` shape survived both adapters without requiring new top-level fields.
 
-There is also now an experimental live adapter for Google Sheets at [`scripts/anac_google_sheets_live.py`](../scripts/anac_google_sheets_live.py). It is intentionally outside CI because this repo does not carry Google API credentials, but it uses the same `SheetApp` manifest and executor shape instead of a separate integration path.
+The repository also includes a live Google Sheets adapter at [`scripts/anac_google_sheets_live.py`](../scripts/anac_google_sheets_live.py), validated against a real throwaway spreadsheet using the same `SheetApp` manifest and executor shape. The captured live traces are committed at [`docs/traces/google-sheets-live-happy-20260309T212638Z.json`](../docs/traces/google-sheets-live-happy-20260309T212638Z.json) and [`docs/traces/google-sheets-live-stale-recovered-20260309T212715Z.json`](../docs/traces/google-sheets-live-stale-recovered-20260309T212715Z.json).
 
 ## The concurrency story, concretely
 
@@ -230,7 +230,6 @@ Current limitations are explicit:
 
 - the linter checks CEL symbol scope, not full CEL grammar
 - the demo executor auto-approves `confirm` steps
-- the live Google Sheets adapter is setup-verified but not CI-executed in this repo because credentials are not available
 - rollback semantics for partially completed workflows are not yet formalized
 - the top-level runtime envelope is still executor-defined; the formal runtime schemas currently cover the payload parts rather than the whole wrapper
 - the runtime schemas have been proven across two adapters, not across an ecosystem
@@ -254,7 +253,7 @@ The `VectorForge` path is the key proof because it does not exercise concurrency
 
 The next meaningful steps are practical rather than theoretical:
 
-- harden and verify the experimental Google Sheets live adapter against a real credentialed test sheet
+- extend the live-adapter coverage beyond Google Sheets or tighten the revision model from spreadsheet-wide to range-aware
 - full CEL parsing once a runtime is chosen
 - rollback semantics for partial-failure workflows
 - integration with an existing agent framework to test the M+N claim against a real external orchestrator

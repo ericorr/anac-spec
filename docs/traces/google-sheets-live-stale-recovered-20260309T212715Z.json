@@ -1,0 +1,1611 @@
+{
+  "captured_at": "2026-03-09T21:27:15+00:00",
+  "adapter": "google_sheets_live",
+  "scenario": "stale-recovered",
+  "spreadsheet": {
+    "sheet_name": "Q1 Sales",
+    "selection": "cell:D7",
+    "spreadsheet_id_redacted": true
+  },
+  "command": {
+    "workflow": "add_summary_row",
+    "force_stale_step": "insert_summary_row",
+    "force_stale_count": 1
+  },
+  "result": {
+    "application_id": "com.example.sheetapp",
+    "workflow_id": "add_summary_row",
+    "status": "success",
+    "outcome": {
+      "status": "success",
+      "disposition": "completed",
+      "reason": "workflow_reached_end",
+      "terminal_step": "add_label",
+      "terminal_transition": "success",
+      "last_error_code": null,
+      "context_refresh_count": 0,
+      "stale_retry_count": 0
+    },
+    "trace": [
+      {
+        "step_id": "read_table",
+        "kind": "observe",
+        "transition": "success",
+        "resolved_reads": [
+          "sheet:Q1 Sales"
+        ],
+        "resolved_inputs": {},
+        "expected_revisions": [],
+        "emissions": {
+          "sheet_name": "Q1 Sales",
+          "sheet_revision": "v7",
+          "last_data_row": 7,
+          "has_header": true,
+          "column_types": {
+            "A": "text",
+            "B": "text",
+            "C": "formula",
+            "D": "formula",
+            "E": "formula",
+            "F": "formula"
+          }
+        },
+        "action_result": null,
+        "simulated_external_event": null,
+        "frame_id": "gs-1001",
+        "next_step": "decide_has_numeric_columns"
+      },
+      {
+        "step_id": "decide_has_numeric_columns",
+        "kind": "decide",
+        "transition": "on_true",
+        "resolved_reads": [],
+        "resolved_inputs": {},
+        "expected_revisions": [],
+        "emissions": {
+          "decision": true
+        },
+        "action_result": null,
+        "simulated_external_event": null,
+        "frame_id": "gs-1001",
+        "next_step": "insert_summary_row"
+      },
+      {
+        "step_id": "insert_summary_row",
+        "kind": "mutate",
+        "transition": "success",
+        "resolved_reads": [],
+        "resolved_inputs": {
+          "sheet": "Q1 Sales",
+          "before_row": 8,
+          "count": 1
+        },
+        "expected_revisions": [
+          {
+            "entity_type": "sheet",
+            "ref": "sheet:Q1 Sales",
+            "revision": "v7"
+          }
+        ],
+        "emissions": {
+          "inserted_range": "8:8",
+          "new_last_row": 7,
+          "summary_row_number": 8
+        },
+        "action_result": {
+          "action_id": "insert_row",
+          "status": "success",
+          "timestamp": "2026-03-09T21:27:03+00:00",
+          "data": {
+            "inserted_range": "8:8",
+            "new_last_row": 7
+          },
+          "warnings": [],
+          "undo_token": null,
+          "state_delta": {
+            "created": [],
+            "modified": [
+              {
+                "entity_type": "sheet",
+                "ref": "sheet:Q1 Sales",
+                "revision": "v7",
+                "data": {
+                  "name": "Q1 Sales",
+                  "used_range": "A1:F7",
+                  "is_protected": false,
+                  "last_data_row": 7,
+                  "has_header_row": true,
+                  "column_types": {
+                    "A": "text",
+                    "B": "text",
+                    "C": "formula",
+                    "D": "formula",
+                    "E": "formula",
+                    "F": "formula",
+                    "G": "text",
+                    "H": "text",
+                    "I": "text",
+                    "J": "text",
+                    "K": "text",
+                    "L": "text",
+                    "M": "text",
+                    "N": "text",
+                    "O": "text",
+                    "P": "text",
+                    "Q": "text",
+                    "R": "text",
+                    "S": "text",
+                    "T": "text",
+                    "U": "text",
+                    "V": "text",
+                    "W": "text",
+                    "X": "text",
+                    "Y": "text",
+                    "Z": "text"
+                  }
+                }
+              }
+            ],
+            "deleted": []
+          },
+          "user_visible_effect": "Inserted row 8 in Q1 Sales"
+        },
+        "simulated_external_event": {
+          "kind": "simulated_external_edit",
+          "step_id": "insert_summary_row",
+          "timestamp": "2026-03-09T21:27:02+00:00",
+          "mutated": [
+            {
+              "entity_type": "sheet",
+              "ref": "sheet:Q1 Sales",
+              "revision": "v7",
+              "note": "Wrote a scratch marker to Z1 to force a stale revision."
+            }
+          ]
+        },
+        "frame_id": "gs-1002",
+        "next_step": "write_formulas"
+      },
+      {
+        "step_id": "write_formulas",
+        "kind": "subflow",
+        "transition": "success",
+        "resolved_reads": [],
+        "resolved_inputs": {},
+        "expected_revisions": [],
+        "emissions": {
+          "results": [
+            {
+              "status": "success",
+              "outcome": {
+                "status": "success",
+                "disposition": "completed",
+                "reason": "workflow_reached_end",
+                "terminal_step": "write_formula",
+                "terminal_transition": "success",
+                "last_error_code": null,
+                "context_refresh_count": 0,
+                "stale_retry_count": 0
+              },
+              "trace": [
+                {
+                  "step_id": "read_formula_target",
+                  "kind": "observe",
+                  "transition": "success",
+                  "resolved_reads": [
+                    "cell:C8"
+                  ],
+                  "resolved_inputs": {},
+                  "expected_revisions": [],
+                  "emissions": {
+                    "target_cell_revision": "v7"
+                  },
+                  "action_result": null,
+                  "simulated_external_event": null,
+                  "frame_id": "gs-1002",
+                  "next_step": "write_formula"
+                },
+                {
+                  "step_id": "write_formula",
+                  "kind": "mutate",
+                  "transition": "success",
+                  "resolved_reads": [],
+                  "resolved_inputs": {
+                    "sheet": "Q1 Sales",
+                    "address": "C8",
+                    "value": "=SUM(C2:C7)"
+                  },
+                  "expected_revisions": [
+                    {
+                      "entity_type": "cell",
+                      "ref": "cell:C8",
+                      "revision": "v7"
+                    }
+                  ],
+                  "emissions": {
+                    "address": "C8",
+                    "computed_value": 1054,
+                    "affected_cells": 1
+                  },
+                  "action_result": {
+                    "action_id": "set_cell_value",
+                    "status": "success",
+                    "timestamp": "2026-03-09T21:27:05+00:00",
+                    "data": {
+                      "address": "C8",
+                      "computed_value": 1054,
+                      "affected_cells": 1
+                    },
+                    "warnings": [],
+                    "undo_token": null,
+                    "state_delta": {
+                      "created": [],
+                      "modified": [
+                        {
+                          "entity_type": "cell",
+                          "ref": "cell:C8",
+                          "revision": "v7",
+                          "data": {
+                            "address": "C8",
+                            "value": null,
+                            "formula": "=SUM(C2:C7)",
+                            "is_locked": false,
+                            "dependencies": [],
+                            "format": {}
+                          }
+                        }
+                      ],
+                      "deleted": []
+                    },
+                    "user_visible_effect": "Updated C8 in Q1 Sales"
+                  },
+                  "simulated_external_event": null,
+                  "frame_id": "gs-1003",
+                  "next_step": "end"
+                }
+              ],
+              "context_frame": {
+                "frame_id": "gs-1003",
+                "emitted_at": "2026-03-09T21:27:06+00:00",
+                "trigger": "agent_action",
+                "subscription_id": "sub-live-google-sheets",
+                "scope": {
+                  "mode": "selection",
+                  "root_refs": [
+                    "sheet:Q1 Sales"
+                  ],
+                  "entity_count": 2,
+                  "truncated": false,
+                  "next_cursor": null
+                },
+                "application_state": {
+                  "screen": "sheet_view",
+                  "mode": "editing",
+                  "active_sheet": "Q1 Sales"
+                },
+                "selection": [
+                  {
+                    "entity_type": "cell",
+                    "ref": "cell:D7",
+                    "revision": "v7"
+                  }
+                ],
+                "permissions": [
+                  "sheet.edit",
+                  "sheet.format"
+                ],
+                "available_actions": [
+                  {
+                    "action_id": "set_cell_value",
+                    "relevance": "primary",
+                    "reason": "A target sheet is configured and writable",
+                    "preconditions_met": true
+                  },
+                  {
+                    "action_id": "insert_row",
+                    "relevance": "primary",
+                    "reason": "The active sheet can accept row insertions",
+                    "preconditions_met": true
+                  },
+                  {
+                    "action_id": "format_cells",
+                    "relevance": "secondary",
+                    "reason": "Formatting is supported through spreadsheets.batchUpdate",
+                    "preconditions_met": true
+                  }
+                ],
+                "active_workflows": [
+                  {
+                    "workflow_id": "add_summary_row",
+                    "lease_id": "lease-demo",
+                    "current_step": "write_formula",
+                    "progress": 0.5,
+                    "next_action_hint": null,
+                    "can_rollback": false,
+                    "context_refresh_count": 0
+                  }
+                ],
+                "entity_snapshots": [
+                  {
+                    "entity_type": "sheet",
+                    "ref": "sheet:Q1 Sales",
+                    "revision": "v7",
+                    "data": {
+                      "name": "Q1 Sales",
+                      "used_range": "A1:F8",
+                      "is_protected": false,
+                      "last_data_row": 8,
+                      "has_header_row": true,
+                      "column_types": {
+                        "A": "text",
+                        "B": "text",
+                        "C": "formula",
+                        "D": "formula",
+                        "E": "formula",
+                        "F": "formula",
+                        "G": "text",
+                        "H": "text",
+                        "I": "text",
+                        "J": "text",
+                        "K": "text",
+                        "L": "text",
+                        "M": "text",
+                        "N": "text",
+                        "O": "text",
+                        "P": "text",
+                        "Q": "text",
+                        "R": "text",
+                        "S": "text",
+                        "T": "text",
+                        "U": "text",
+                        "V": "text",
+                        "W": "text",
+                        "X": "text",
+                        "Y": "text",
+                        "Z": "text"
+                      }
+                    }
+                  },
+                  {
+                    "entity_type": "cell",
+                    "ref": "cell:D7",
+                    "revision": "v7",
+                    "data": {
+                      "address": "D7",
+                      "value": null,
+                      "formula": "=SUM(D2:D6)",
+                      "is_locked": false,
+                      "dependencies": [],
+                      "format": {}
+                    }
+                  }
+                ],
+                "warnings": [
+                  {
+                    "severity": "info",
+                    "message": "Live adapter uses Drive version, falling back to modifiedTime, as a coarse spreadsheet revision.",
+                    "related_entity": {
+                      "entity_type": "sheet",
+                      "ref": "sheet:Q1 Sales",
+                      "revision": "v7"
+                    },
+                    "suggested_action": null
+                  }
+                ],
+                "recent_events": []
+              },
+              "outputs": {
+                "read_formula_target": {
+                  "target_cell_revision": "v7"
+                },
+                "write_formula": {
+                  "address": "C8",
+                  "computed_value": 1054,
+                  "affected_cells": 1
+                }
+              }
+            },
+            {
+              "status": "success",
+              "outcome": {
+                "status": "success",
+                "disposition": "completed",
+                "reason": "workflow_reached_end",
+                "terminal_step": "write_formula",
+                "terminal_transition": "success",
+                "last_error_code": null,
+                "context_refresh_count": 0,
+                "stale_retry_count": 0
+              },
+              "trace": [
+                {
+                  "step_id": "read_formula_target",
+                  "kind": "observe",
+                  "transition": "success",
+                  "resolved_reads": [
+                    "cell:D8"
+                  ],
+                  "resolved_inputs": {},
+                  "expected_revisions": [],
+                  "emissions": {
+                    "target_cell_revision": "v7"
+                  },
+                  "action_result": null,
+                  "simulated_external_event": null,
+                  "frame_id": "gs-1003",
+                  "next_step": "write_formula"
+                },
+                {
+                  "step_id": "write_formula",
+                  "kind": "mutate",
+                  "transition": "success",
+                  "resolved_reads": [],
+                  "resolved_inputs": {
+                    "sheet": "Q1 Sales",
+                    "address": "D8",
+                    "value": "=SUM(D2:D7)"
+                  },
+                  "expected_revisions": [
+                    {
+                      "entity_type": "cell",
+                      "ref": "cell:D8",
+                      "revision": "v7"
+                    }
+                  ],
+                  "emissions": {
+                    "address": "D8",
+                    "computed_value": 1106,
+                    "affected_cells": 1
+                  },
+                  "action_result": {
+                    "action_id": "set_cell_value",
+                    "status": "success",
+                    "timestamp": "2026-03-09T21:27:06+00:00",
+                    "data": {
+                      "address": "D8",
+                      "computed_value": 1106,
+                      "affected_cells": 1
+                    },
+                    "warnings": [],
+                    "undo_token": null,
+                    "state_delta": {
+                      "created": [],
+                      "modified": [
+                        {
+                          "entity_type": "cell",
+                          "ref": "cell:D8",
+                          "revision": "v7",
+                          "data": {
+                            "address": "D8",
+                            "value": null,
+                            "formula": "=SUM(D2:D7)",
+                            "is_locked": false,
+                            "dependencies": [],
+                            "format": {}
+                          }
+                        }
+                      ],
+                      "deleted": []
+                    },
+                    "user_visible_effect": "Updated D8 in Q1 Sales"
+                  },
+                  "simulated_external_event": null,
+                  "frame_id": "gs-1004",
+                  "next_step": "end"
+                }
+              ],
+              "context_frame": {
+                "frame_id": "gs-1004",
+                "emitted_at": "2026-03-09T21:27:07+00:00",
+                "trigger": "agent_action",
+                "subscription_id": "sub-live-google-sheets",
+                "scope": {
+                  "mode": "selection",
+                  "root_refs": [
+                    "sheet:Q1 Sales"
+                  ],
+                  "entity_count": 2,
+                  "truncated": false,
+                  "next_cursor": null
+                },
+                "application_state": {
+                  "screen": "sheet_view",
+                  "mode": "editing",
+                  "active_sheet": "Q1 Sales"
+                },
+                "selection": [
+                  {
+                    "entity_type": "cell",
+                    "ref": "cell:D7",
+                    "revision": "v7"
+                  }
+                ],
+                "permissions": [
+                  "sheet.edit",
+                  "sheet.format"
+                ],
+                "available_actions": [
+                  {
+                    "action_id": "set_cell_value",
+                    "relevance": "primary",
+                    "reason": "A target sheet is configured and writable",
+                    "preconditions_met": true
+                  },
+                  {
+                    "action_id": "insert_row",
+                    "relevance": "primary",
+                    "reason": "The active sheet can accept row insertions",
+                    "preconditions_met": true
+                  },
+                  {
+                    "action_id": "format_cells",
+                    "relevance": "secondary",
+                    "reason": "Formatting is supported through spreadsheets.batchUpdate",
+                    "preconditions_met": true
+                  }
+                ],
+                "active_workflows": [
+                  {
+                    "workflow_id": "add_summary_row",
+                    "lease_id": "lease-demo",
+                    "current_step": "write_formula",
+                    "progress": 0.5,
+                    "next_action_hint": null,
+                    "can_rollback": false,
+                    "context_refresh_count": 0
+                  }
+                ],
+                "entity_snapshots": [
+                  {
+                    "entity_type": "sheet",
+                    "ref": "sheet:Q1 Sales",
+                    "revision": "v7",
+                    "data": {
+                      "name": "Q1 Sales",
+                      "used_range": "A1:F8",
+                      "is_protected": false,
+                      "last_data_row": 8,
+                      "has_header_row": true,
+                      "column_types": {
+                        "A": "text",
+                        "B": "text",
+                        "C": "formula",
+                        "D": "formula",
+                        "E": "formula",
+                        "F": "formula",
+                        "G": "text",
+                        "H": "text",
+                        "I": "text",
+                        "J": "text",
+                        "K": "text",
+                        "L": "text",
+                        "M": "text",
+                        "N": "text",
+                        "O": "text",
+                        "P": "text",
+                        "Q": "text",
+                        "R": "text",
+                        "S": "text",
+                        "T": "text",
+                        "U": "text",
+                        "V": "text",
+                        "W": "text",
+                        "X": "text",
+                        "Y": "text",
+                        "Z": "text"
+                      }
+                    }
+                  },
+                  {
+                    "entity_type": "cell",
+                    "ref": "cell:D7",
+                    "revision": "v7",
+                    "data": {
+                      "address": "D7",
+                      "value": null,
+                      "formula": "=SUM(D2:D6)",
+                      "is_locked": false,
+                      "dependencies": [],
+                      "format": {}
+                    }
+                  }
+                ],
+                "warnings": [
+                  {
+                    "severity": "info",
+                    "message": "Live adapter uses Drive version, falling back to modifiedTime, as a coarse spreadsheet revision.",
+                    "related_entity": {
+                      "entity_type": "sheet",
+                      "ref": "sheet:Q1 Sales",
+                      "revision": "v7"
+                    },
+                    "suggested_action": null
+                  }
+                ],
+                "recent_events": []
+              },
+              "outputs": {
+                "read_formula_target": {
+                  "target_cell_revision": "v7"
+                },
+                "write_formula": {
+                  "address": "D8",
+                  "computed_value": 1106,
+                  "affected_cells": 1
+                }
+              }
+            },
+            {
+              "status": "success",
+              "outcome": {
+                "status": "success",
+                "disposition": "completed",
+                "reason": "workflow_reached_end",
+                "terminal_step": "write_formula",
+                "terminal_transition": "success",
+                "last_error_code": null,
+                "context_refresh_count": 0,
+                "stale_retry_count": 0
+              },
+              "trace": [
+                {
+                  "step_id": "read_formula_target",
+                  "kind": "observe",
+                  "transition": "success",
+                  "resolved_reads": [
+                    "cell:E8"
+                  ],
+                  "resolved_inputs": {},
+                  "expected_revisions": [],
+                  "emissions": {
+                    "target_cell_revision": "v7"
+                  },
+                  "action_result": null,
+                  "simulated_external_event": null,
+                  "frame_id": "gs-1004",
+                  "next_step": "write_formula"
+                },
+                {
+                  "step_id": "write_formula",
+                  "kind": "mutate",
+                  "transition": "success",
+                  "resolved_reads": [],
+                  "resolved_inputs": {
+                    "sheet": "Q1 Sales",
+                    "address": "E8",
+                    "value": "=SUM(E2:E7)"
+                  },
+                  "expected_revisions": [
+                    {
+                      "entity_type": "cell",
+                      "ref": "cell:E8",
+                      "revision": "v7"
+                    }
+                  ],
+                  "emissions": {
+                    "address": "E8",
+                    "computed_value": 1178,
+                    "affected_cells": 1
+                  },
+                  "action_result": {
+                    "action_id": "set_cell_value",
+                    "status": "success",
+                    "timestamp": "2026-03-09T21:27:08+00:00",
+                    "data": {
+                      "address": "E8",
+                      "computed_value": 1178,
+                      "affected_cells": 1
+                    },
+                    "warnings": [],
+                    "undo_token": null,
+                    "state_delta": {
+                      "created": [],
+                      "modified": [
+                        {
+                          "entity_type": "cell",
+                          "ref": "cell:E8",
+                          "revision": "v7",
+                          "data": {
+                            "address": "E8",
+                            "value": null,
+                            "formula": "=SUM(E2:E7)",
+                            "is_locked": false,
+                            "dependencies": [],
+                            "format": {}
+                          }
+                        }
+                      ],
+                      "deleted": []
+                    },
+                    "user_visible_effect": "Updated E8 in Q1 Sales"
+                  },
+                  "simulated_external_event": null,
+                  "frame_id": "gs-1005",
+                  "next_step": "end"
+                }
+              ],
+              "context_frame": {
+                "frame_id": "gs-1005",
+                "emitted_at": "2026-03-09T21:27:09+00:00",
+                "trigger": "agent_action",
+                "subscription_id": "sub-live-google-sheets",
+                "scope": {
+                  "mode": "selection",
+                  "root_refs": [
+                    "sheet:Q1 Sales"
+                  ],
+                  "entity_count": 2,
+                  "truncated": false,
+                  "next_cursor": null
+                },
+                "application_state": {
+                  "screen": "sheet_view",
+                  "mode": "editing",
+                  "active_sheet": "Q1 Sales"
+                },
+                "selection": [
+                  {
+                    "entity_type": "cell",
+                    "ref": "cell:D7",
+                    "revision": "v7"
+                  }
+                ],
+                "permissions": [
+                  "sheet.edit",
+                  "sheet.format"
+                ],
+                "available_actions": [
+                  {
+                    "action_id": "set_cell_value",
+                    "relevance": "primary",
+                    "reason": "A target sheet is configured and writable",
+                    "preconditions_met": true
+                  },
+                  {
+                    "action_id": "insert_row",
+                    "relevance": "primary",
+                    "reason": "The active sheet can accept row insertions",
+                    "preconditions_met": true
+                  },
+                  {
+                    "action_id": "format_cells",
+                    "relevance": "secondary",
+                    "reason": "Formatting is supported through spreadsheets.batchUpdate",
+                    "preconditions_met": true
+                  }
+                ],
+                "active_workflows": [
+                  {
+                    "workflow_id": "add_summary_row",
+                    "lease_id": "lease-demo",
+                    "current_step": "write_formula",
+                    "progress": 0.5,
+                    "next_action_hint": null,
+                    "can_rollback": false,
+                    "context_refresh_count": 0
+                  }
+                ],
+                "entity_snapshots": [
+                  {
+                    "entity_type": "sheet",
+                    "ref": "sheet:Q1 Sales",
+                    "revision": "v7",
+                    "data": {
+                      "name": "Q1 Sales",
+                      "used_range": "A1:F8",
+                      "is_protected": false,
+                      "last_data_row": 8,
+                      "has_header_row": true,
+                      "column_types": {
+                        "A": "text",
+                        "B": "text",
+                        "C": "formula",
+                        "D": "formula",
+                        "E": "formula",
+                        "F": "formula",
+                        "G": "text",
+                        "H": "text",
+                        "I": "text",
+                        "J": "text",
+                        "K": "text",
+                        "L": "text",
+                        "M": "text",
+                        "N": "text",
+                        "O": "text",
+                        "P": "text",
+                        "Q": "text",
+                        "R": "text",
+                        "S": "text",
+                        "T": "text",
+                        "U": "text",
+                        "V": "text",
+                        "W": "text",
+                        "X": "text",
+                        "Y": "text",
+                        "Z": "text"
+                      }
+                    }
+                  },
+                  {
+                    "entity_type": "cell",
+                    "ref": "cell:D7",
+                    "revision": "v7",
+                    "data": {
+                      "address": "D7",
+                      "value": null,
+                      "formula": "=SUM(D2:D6)",
+                      "is_locked": false,
+                      "dependencies": [],
+                      "format": {}
+                    }
+                  }
+                ],
+                "warnings": [
+                  {
+                    "severity": "info",
+                    "message": "Live adapter uses Drive version, falling back to modifiedTime, as a coarse spreadsheet revision.",
+                    "related_entity": {
+                      "entity_type": "sheet",
+                      "ref": "sheet:Q1 Sales",
+                      "revision": "v7"
+                    },
+                    "suggested_action": null
+                  }
+                ],
+                "recent_events": []
+              },
+              "outputs": {
+                "read_formula_target": {
+                  "target_cell_revision": "v7"
+                },
+                "write_formula": {
+                  "address": "E8",
+                  "computed_value": 1178,
+                  "affected_cells": 1
+                }
+              }
+            },
+            {
+              "status": "success",
+              "outcome": {
+                "status": "success",
+                "disposition": "completed",
+                "reason": "workflow_reached_end",
+                "terminal_step": "write_formula",
+                "terminal_transition": "success",
+                "last_error_code": null,
+                "context_refresh_count": 0,
+                "stale_retry_count": 0
+              },
+              "trace": [
+                {
+                  "step_id": "read_formula_target",
+                  "kind": "observe",
+                  "transition": "success",
+                  "resolved_reads": [
+                    "cell:F8"
+                  ],
+                  "resolved_inputs": {},
+                  "expected_revisions": [],
+                  "emissions": {
+                    "target_cell_revision": "v7"
+                  },
+                  "action_result": null,
+                  "simulated_external_event": null,
+                  "frame_id": "gs-1005",
+                  "next_step": "write_formula"
+                },
+                {
+                  "step_id": "write_formula",
+                  "kind": "mutate",
+                  "transition": "success",
+                  "resolved_reads": [],
+                  "resolved_inputs": {
+                    "sheet": "Q1 Sales",
+                    "address": "F8",
+                    "value": "=SUM(F2:F7)"
+                  },
+                  "expected_revisions": [
+                    {
+                      "entity_type": "cell",
+                      "ref": "cell:F8",
+                      "revision": "v7"
+                    }
+                  ],
+                  "emissions": {
+                    "address": "F8",
+                    "computed_value": 3338,
+                    "affected_cells": 1
+                  },
+                  "action_result": {
+                    "action_id": "set_cell_value",
+                    "status": "success",
+                    "timestamp": "2026-03-09T21:27:10+00:00",
+                    "data": {
+                      "address": "F8",
+                      "computed_value": 3338,
+                      "affected_cells": 1
+                    },
+                    "warnings": [],
+                    "undo_token": null,
+                    "state_delta": {
+                      "created": [],
+                      "modified": [
+                        {
+                          "entity_type": "cell",
+                          "ref": "cell:F8",
+                          "revision": "v7",
+                          "data": {
+                            "address": "F8",
+                            "value": null,
+                            "formula": "=SUM(F2:F7)",
+                            "is_locked": false,
+                            "dependencies": [],
+                            "format": {}
+                          }
+                        }
+                      ],
+                      "deleted": []
+                    },
+                    "user_visible_effect": "Updated F8 in Q1 Sales"
+                  },
+                  "simulated_external_event": null,
+                  "frame_id": "gs-1006",
+                  "next_step": "end"
+                }
+              ],
+              "context_frame": {
+                "frame_id": "gs-1006",
+                "emitted_at": "2026-03-09T21:27:10+00:00",
+                "trigger": "agent_action",
+                "subscription_id": "sub-live-google-sheets",
+                "scope": {
+                  "mode": "selection",
+                  "root_refs": [
+                    "sheet:Q1 Sales"
+                  ],
+                  "entity_count": 2,
+                  "truncated": false,
+                  "next_cursor": null
+                },
+                "application_state": {
+                  "screen": "sheet_view",
+                  "mode": "editing",
+                  "active_sheet": "Q1 Sales"
+                },
+                "selection": [
+                  {
+                    "entity_type": "cell",
+                    "ref": "cell:D7",
+                    "revision": "v7"
+                  }
+                ],
+                "permissions": [
+                  "sheet.edit",
+                  "sheet.format"
+                ],
+                "available_actions": [
+                  {
+                    "action_id": "set_cell_value",
+                    "relevance": "primary",
+                    "reason": "A target sheet is configured and writable",
+                    "preconditions_met": true
+                  },
+                  {
+                    "action_id": "insert_row",
+                    "relevance": "primary",
+                    "reason": "The active sheet can accept row insertions",
+                    "preconditions_met": true
+                  },
+                  {
+                    "action_id": "format_cells",
+                    "relevance": "secondary",
+                    "reason": "Formatting is supported through spreadsheets.batchUpdate",
+                    "preconditions_met": true
+                  }
+                ],
+                "active_workflows": [
+                  {
+                    "workflow_id": "add_summary_row",
+                    "lease_id": "lease-demo",
+                    "current_step": "write_formula",
+                    "progress": 0.5,
+                    "next_action_hint": null,
+                    "can_rollback": false,
+                    "context_refresh_count": 0
+                  }
+                ],
+                "entity_snapshots": [
+                  {
+                    "entity_type": "sheet",
+                    "ref": "sheet:Q1 Sales",
+                    "revision": "v7",
+                    "data": {
+                      "name": "Q1 Sales",
+                      "used_range": "A1:F8",
+                      "is_protected": false,
+                      "last_data_row": 8,
+                      "has_header_row": true,
+                      "column_types": {
+                        "A": "text",
+                        "B": "text",
+                        "C": "formula",
+                        "D": "formula",
+                        "E": "formula",
+                        "F": "formula",
+                        "G": "text",
+                        "H": "text",
+                        "I": "text",
+                        "J": "text",
+                        "K": "text",
+                        "L": "text",
+                        "M": "text",
+                        "N": "text",
+                        "O": "text",
+                        "P": "text",
+                        "Q": "text",
+                        "R": "text",
+                        "S": "text",
+                        "T": "text",
+                        "U": "text",
+                        "V": "text",
+                        "W": "text",
+                        "X": "text",
+                        "Y": "text",
+                        "Z": "text"
+                      }
+                    }
+                  },
+                  {
+                    "entity_type": "cell",
+                    "ref": "cell:D7",
+                    "revision": "v7",
+                    "data": {
+                      "address": "D7",
+                      "value": null,
+                      "formula": "=SUM(D2:D6)",
+                      "is_locked": false,
+                      "dependencies": [],
+                      "format": {}
+                    }
+                  }
+                ],
+                "warnings": [
+                  {
+                    "severity": "info",
+                    "message": "Live adapter uses Drive version, falling back to modifiedTime, as a coarse spreadsheet revision.",
+                    "related_entity": {
+                      "entity_type": "sheet",
+                      "ref": "sheet:Q1 Sales",
+                      "revision": "v7"
+                    },
+                    "suggested_action": null
+                  }
+                ],
+                "recent_events": []
+              },
+              "outputs": {
+                "read_formula_target": {
+                  "target_cell_revision": "v7"
+                },
+                "write_formula": {
+                  "address": "F8",
+                  "computed_value": 3338,
+                  "affected_cells": 1
+                }
+              }
+            }
+          ]
+        },
+        "action_result": null,
+        "simulated_external_event": null,
+        "frame_id": "gs-1006",
+        "next_step": "read_summary_row_for_formatting"
+      },
+      {
+        "step_id": "read_summary_row_for_formatting",
+        "kind": "observe",
+        "transition": "success",
+        "resolved_reads": [
+          "cell:A8",
+          "cell:B8",
+          "cell:C8",
+          "cell:D8",
+          "cell:E8",
+          "cell:F8"
+        ],
+        "resolved_inputs": {},
+        "expected_revisions": [],
+        "emissions": {
+          "rev_a": "v7",
+          "rev_b": "v7",
+          "rev_c": "v7",
+          "rev_d": "v7",
+          "rev_e": "v7",
+          "rev_f": "v7"
+        },
+        "action_result": null,
+        "simulated_external_event": null,
+        "frame_id": "gs-1006",
+        "next_step": "apply_formatting"
+      },
+      {
+        "step_id": "apply_formatting",
+        "kind": "mutate",
+        "transition": "success",
+        "resolved_reads": [],
+        "resolved_inputs": {
+          "sheet": "Q1 Sales",
+          "range": "A8:F8",
+          "format": {
+            "bold": true,
+            "border_top": "thin"
+          }
+        },
+        "expected_revisions": [
+          {
+            "entity_type": "cell",
+            "ref": "cell:A8",
+            "revision": "v7"
+          },
+          {
+            "entity_type": "cell",
+            "ref": "cell:B8",
+            "revision": "v7"
+          },
+          {
+            "entity_type": "cell",
+            "ref": "cell:C8",
+            "revision": "v7"
+          },
+          {
+            "entity_type": "cell",
+            "ref": "cell:D8",
+            "revision": "v7"
+          },
+          {
+            "entity_type": "cell",
+            "ref": "cell:E8",
+            "revision": "v7"
+          },
+          {
+            "entity_type": "cell",
+            "ref": "cell:F8",
+            "revision": "v7"
+          }
+        ],
+        "emissions": {
+          "range": "A8:F8",
+          "applied_properties": [
+            "bold",
+            "border_top"
+          ]
+        },
+        "action_result": {
+          "action_id": "format_cells",
+          "status": "success",
+          "timestamp": "2026-03-09T21:27:13+00:00",
+          "data": {
+            "range": "A8:F8",
+            "applied_properties": [
+              "bold",
+              "border_top"
+            ]
+          },
+          "warnings": [],
+          "undo_token": null,
+          "state_delta": {
+            "created": [],
+            "modified": [
+              {
+                "entity_type": "cell",
+                "ref": "cell:A8",
+                "revision": "v7",
+                "data": {
+                  "address": "A8",
+                  "value": null,
+                  "formula": null,
+                  "is_locked": false,
+                  "dependencies": [],
+                  "format": {}
+                }
+              },
+              {
+                "entity_type": "cell",
+                "ref": "cell:B8",
+                "revision": "v7",
+                "data": {
+                  "address": "B8",
+                  "value": null,
+                  "formula": null,
+                  "is_locked": false,
+                  "dependencies": [],
+                  "format": {}
+                }
+              },
+              {
+                "entity_type": "cell",
+                "ref": "cell:C8",
+                "revision": "v7",
+                "data": {
+                  "address": "C8",
+                  "value": null,
+                  "formula": "=SUM(C2:C7)",
+                  "is_locked": false,
+                  "dependencies": [],
+                  "format": {}
+                }
+              },
+              {
+                "entity_type": "cell",
+                "ref": "cell:D8",
+                "revision": "v7",
+                "data": {
+                  "address": "D8",
+                  "value": null,
+                  "formula": "=SUM(D2:D7)",
+                  "is_locked": false,
+                  "dependencies": [],
+                  "format": {}
+                }
+              },
+              {
+                "entity_type": "cell",
+                "ref": "cell:E8",
+                "revision": "v7",
+                "data": {
+                  "address": "E8",
+                  "value": null,
+                  "formula": "=SUM(E2:E7)",
+                  "is_locked": false,
+                  "dependencies": [],
+                  "format": {}
+                }
+              },
+              {
+                "entity_type": "cell",
+                "ref": "cell:F8",
+                "revision": "v7",
+                "data": {
+                  "address": "F8",
+                  "value": null,
+                  "formula": "=SUM(F2:F7)",
+                  "is_locked": false,
+                  "dependencies": [],
+                  "format": {}
+                }
+              }
+            ],
+            "deleted": []
+          },
+          "user_visible_effect": "Formatted A8:F8 in Q1 Sales"
+        },
+        "simulated_external_event": null,
+        "frame_id": "gs-1007",
+        "next_step": "decide_add_label"
+      },
+      {
+        "step_id": "decide_add_label",
+        "kind": "decide",
+        "transition": "on_true",
+        "resolved_reads": [],
+        "resolved_inputs": {},
+        "expected_revisions": [],
+        "emissions": {
+          "decision": true
+        },
+        "action_result": null,
+        "simulated_external_event": null,
+        "frame_id": "gs-1007",
+        "next_step": "read_label_target"
+      },
+      {
+        "step_id": "read_label_target",
+        "kind": "observe",
+        "transition": "success",
+        "resolved_reads": [
+          "cell:A8"
+        ],
+        "resolved_inputs": {},
+        "expected_revisions": [],
+        "emissions": {
+          "label_cell_revision": "v7"
+        },
+        "action_result": null,
+        "simulated_external_event": null,
+        "frame_id": "gs-1007",
+        "next_step": "add_label"
+      },
+      {
+        "step_id": "add_label",
+        "kind": "mutate",
+        "transition": "success",
+        "resolved_reads": [],
+        "resolved_inputs": {
+          "sheet": "Q1 Sales",
+          "address": "A8",
+          "value": "Total"
+        },
+        "expected_revisions": [
+          {
+            "entity_type": "cell",
+            "ref": "cell:A8",
+            "revision": "v7"
+          }
+        ],
+        "emissions": {
+          "address": "A8",
+          "computed_value": "Total",
+          "affected_cells": 1
+        },
+        "action_result": {
+          "action_id": "set_cell_value",
+          "status": "success",
+          "timestamp": "2026-03-09T21:27:14+00:00",
+          "data": {
+            "address": "A8",
+            "computed_value": "Total",
+            "affected_cells": 1
+          },
+          "warnings": [],
+          "undo_token": null,
+          "state_delta": {
+            "created": [],
+            "modified": [
+              {
+                "entity_type": "cell",
+                "ref": "cell:A8",
+                "revision": "v7",
+                "data": {
+                  "address": "A8",
+                  "value": "Total",
+                  "formula": null,
+                  "is_locked": false,
+                  "dependencies": [],
+                  "format": {}
+                }
+              }
+            ],
+            "deleted": []
+          },
+          "user_visible_effect": "Updated A8 in Q1 Sales"
+        },
+        "simulated_external_event": null,
+        "frame_id": "gs-1008",
+        "next_step": "end"
+      }
+    ],
+    "final_context_frame": {
+      "frame_id": "gs-1008",
+      "emitted_at": "2026-03-09T21:27:15+00:00",
+      "trigger": "agent_action",
+      "subscription_id": "sub-live-google-sheets",
+      "scope": {
+        "mode": "selection",
+        "root_refs": [
+          "sheet:Q1 Sales"
+        ],
+        "entity_count": 2,
+        "truncated": false,
+        "next_cursor": null
+      },
+      "application_state": {
+        "screen": "sheet_view",
+        "mode": "editing",
+        "active_sheet": "Q1 Sales"
+      },
+      "selection": [
+        {
+          "entity_type": "cell",
+          "ref": "cell:D7",
+          "revision": "v7"
+        }
+      ],
+      "permissions": [
+        "sheet.edit",
+        "sheet.format"
+      ],
+      "available_actions": [
+        {
+          "action_id": "set_cell_value",
+          "relevance": "primary",
+          "reason": "A target sheet is configured and writable",
+          "preconditions_met": true
+        },
+        {
+          "action_id": "insert_row",
+          "relevance": "primary",
+          "reason": "The active sheet can accept row insertions",
+          "preconditions_met": true
+        },
+        {
+          "action_id": "format_cells",
+          "relevance": "secondary",
+          "reason": "Formatting is supported through spreadsheets.batchUpdate",
+          "preconditions_met": true
+        }
+      ],
+      "active_workflows": [
+        {
+          "workflow_id": "add_summary_row",
+          "lease_id": "lease-demo",
+          "current_step": "add_label",
+          "progress": 0.5333333333333333,
+          "next_action_hint": null,
+          "can_rollback": false,
+          "context_refresh_count": 0
+        }
+      ],
+      "entity_snapshots": [
+        {
+          "entity_type": "sheet",
+          "ref": "sheet:Q1 Sales",
+          "revision": "v7",
+          "data": {
+            "name": "Q1 Sales",
+            "used_range": "A1:F8",
+            "is_protected": false,
+            "last_data_row": 8,
+            "has_header_row": true,
+            "column_types": {
+              "A": "text",
+              "B": "text",
+              "C": "formula",
+              "D": "formula",
+              "E": "formula",
+              "F": "formula",
+              "G": "text",
+              "H": "text",
+              "I": "text",
+              "J": "text",
+              "K": "text",
+              "L": "text",
+              "M": "text",
+              "N": "text",
+              "O": "text",
+              "P": "text",
+              "Q": "text",
+              "R": "text",
+              "S": "text",
+              "T": "text",
+              "U": "text",
+              "V": "text",
+              "W": "text",
+              "X": "text",
+              "Y": "text",
+              "Z": "text"
+            }
+          }
+        },
+        {
+          "entity_type": "cell",
+          "ref": "cell:D7",
+          "revision": "v7",
+          "data": {
+            "address": "D7",
+            "value": null,
+            "formula": "=SUM(D2:D6)",
+            "is_locked": false,
+            "dependencies": [],
+            "format": {}
+          }
+        }
+      ],
+      "warnings": [
+        {
+          "severity": "info",
+          "message": "Live adapter uses Drive version, falling back to modifiedTime, as a coarse spreadsheet revision.",
+          "related_entity": {
+            "entity_type": "sheet",
+            "ref": "sheet:Q1 Sales",
+            "revision": "v7"
+          },
+          "suggested_action": null
+        }
+      ],
+      "recent_events": []
+    },
+    "artifacts": {
+      "summary_row": {
+        "A8": {
+          "address": "A8",
+          "value": "Total",
+          "formula": null,
+          "is_locked": false,
+          "dependencies": [],
+          "format": {}
+        },
+        "B8": {
+          "address": "B8",
+          "value": "",
+          "formula": null,
+          "is_locked": false,
+          "dependencies": [],
+          "format": {}
+        },
+        "C8": {
+          "address": "C8",
+          "value": null,
+          "formula": "=SUM(C2:C7)",
+          "is_locked": false,
+          "dependencies": [],
+          "format": {}
+        },
+        "D8": {
+          "address": "D8",
+          "value": null,
+          "formula": "=SUM(D2:D7)",
+          "is_locked": false,
+          "dependencies": [],
+          "format": {}
+        },
+        "E8": {
+          "address": "E8",
+          "value": null,
+          "formula": "=SUM(E2:E7)",
+          "is_locked": false,
+          "dependencies": [],
+          "format": {}
+        },
+        "F8": {
+          "address": "F8",
+          "value": null,
+          "formula": "=SUM(F2:F7)",
+          "is_locked": false,
+          "dependencies": [],
+          "format": {}
+        }
+      }
+    },
+    "summary_row": {
+      "A8": {
+        "address": "A8",
+        "value": "Total",
+        "formula": null,
+        "is_locked": false,
+        "dependencies": [],
+        "format": {}
+      },
+      "B8": {
+        "address": "B8",
+        "value": "",
+        "formula": null,
+        "is_locked": false,
+        "dependencies": [],
+        "format": {}
+      },
+      "C8": {
+        "address": "C8",
+        "value": null,
+        "formula": "=SUM(C2:C7)",
+        "is_locked": false,
+        "dependencies": [],
+        "format": {}
+      },
+      "D8": {
+        "address": "D8",
+        "value": null,
+        "formula": "=SUM(D2:D7)",
+        "is_locked": false,
+        "dependencies": [],
+        "format": {}
+      },
+      "E8": {
+        "address": "E8",
+        "value": null,
+        "formula": "=SUM(E2:E7)",
+        "is_locked": false,
+        "dependencies": [],
+        "format": {}
+      },
+      "F8": {
+        "address": "F8",
+        "value": null,
+        "formula": "=SUM(F2:F7)",
+        "is_locked": false,
+        "dependencies": [],
+        "format": {}
+      }
+    }
+  }
+}

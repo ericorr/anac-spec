@@ -57,6 +57,14 @@ Suggested test sheet shape:
 - headers in row 1: `Rep`, `Region`, `Jan`, `Feb`, `Mar`, `Total`
 - 5 to 10 rows of sample numeric data beneath the header
 
+The repo also includes a helper that can seed an existing shared spreadsheet or create a new one when the credentials have creation permission:
+
+```bash
+python3 scripts/create_google_sheets_test_sheet.py \
+  --spreadsheet-id <spreadsheet-id> \
+  --sheet-name "Q1 Sales"
+```
+
 ## Service-account checklist
 
 1. Create or choose a Google Cloud project.
@@ -123,7 +131,7 @@ python3 scripts/anac_google_sheets_live.py \
   --force-stale-count 1
 ```
 
-The stale path works by writing a marker to `ZZ1` before the target mutate step. That changes the spreadsheet revision without disturbing the summary-table region.
+The stale path works by writing a marker to `Z1` before the target mutate step. That changes the spreadsheet revision without disturbing the summary-table region.
 
 ## Capture a commit-ready trace
 

@@ -550,7 +550,7 @@ class LiveGoogleSheetsAdapter(BaseDemoAdapter):
 
     def simulate_external_change(self, step_id: str, expected_revisions: list[dict[str, Any]]) -> dict[str, Any]:
         del expected_revisions
-        scratch_cell = "ZZ1"
+        scratch_cell = "Z1"
         marker = f"anac-stale:{step_id}:{iso_now()}"
         self.ensure_services().sheets.spreadsheets().values().update(
             spreadsheetId=self.spreadsheet_id,
