@@ -435,10 +435,28 @@
             },
             "continue_on_error": false,
             "on": {
-              "success": "apply_formatting",
-              "partial": "apply_formatting",
+              "success": "read_summary_row_for_formatting",
+              "partial": "read_summary_row_for_formatting",
               "failure": "abort_formula_failed",
               "stale_revision": "refresh_context"
+            }
+          },
+          {
+            "id": "read_summary_row_for_formatting",
+            "kind": "observe",
+            "description": "Read current cell revisions for the summary row before applying formatting",
+            "reads_refs": [
+              "cell:A${steps.insert_summary_row.summary_row_number}",
+              "cell:B${steps.insert_summary_row.summary_row_number}",
+              "cell:C${steps.insert_summary_row.summary_row_number}",
+              "cell:D${steps.insert_summary_row.summary_row_number}",
+              "cell:E${steps.insert_summary_row.summary_row_number}",
+              "cell:F${steps.insert_summary_row.summary_row_number}"
+            ],
+            "emits": ["rev_a", "rev_b", "rev_c", "rev_d", "rev_e", "rev_f"],
+            "on": {
+              "success": "apply_formatting",
+              "failure": "abort_formula_failed"
             }
           },
           {
@@ -454,6 +472,38 @@
                 "border_top": "thin"
               }
             },
+            "expected_revisions": [
+              {
+                "entity_type": "cell",
+                "ref": "cell:A${steps.insert_summary_row.summary_row_number}",
+                "revision": "${steps.read_summary_row_for_formatting.rev_a}"
+              },
+              {
+                "entity_type": "cell",
+                "ref": "cell:B${steps.insert_summary_row.summary_row_number}",
+                "revision": "${steps.read_summary_row_for_formatting.rev_b}"
+              },
+              {
+                "entity_type": "cell",
+                "ref": "cell:C${steps.insert_summary_row.summary_row_number}",
+                "revision": "${steps.read_summary_row_for_formatting.rev_c}"
+              },
+              {
+                "entity_type": "cell",
+                "ref": "cell:D${steps.insert_summary_row.summary_row_number}",
+                "revision": "${steps.read_summary_row_for_formatting.rev_d}"
+              },
+              {
+                "entity_type": "cell",
+                "ref": "cell:E${steps.insert_summary_row.summary_row_number}",
+                "revision": "${steps.read_summary_row_for_formatting.rev_e}"
+              },
+              {
+                "entity_type": "cell",
+                "ref": "cell:F${steps.insert_summary_row.summary_row_number}",
+                "revision": "${steps.read_summary_row_for_formatting.rev_f}"
+              }
+            ],
             "writes_refs": ["cell:A${steps.insert_summary_row.summary_row_number}:F${steps.insert_summary_row.summary_row_number}"],
             "on": {
               "success": "decide_add_label",
@@ -466,8 +516,19 @@
             "kind": "decide",
             "description": "If column A contains text labels, add 'Total' to the summary row",
             "predicate": "steps.read_table.column_types[\"A\"] == \"text\"",
-            "on_true": "add_label",
+            "on_true": "read_label_target",
             "on_false": "end"
+          },
+          {
+            "id": "read_label_target",
+            "kind": "observe",
+            "description": "Read the current revision for the summary row label cell",
+            "reads_refs": ["cell:A${steps.insert_summary_row.summary_row_number}"],
+            "emits": ["label_cell_revision"],
+            "on": {
+              "success": "add_label",
+              "failure": "end"
+            }
           },
           {
             "id": "add_label",
@@ -479,6 +540,13 @@
               "address": "A${steps.insert_summary_row.summary_row_number}",
               "value": "Total"
             },
+            "expected_revisions": [
+              {
+                "entity_type": "cell",
+                "ref": "cell:A${steps.insert_summary_row.summary_row_number}",
+                "revision": "${steps.read_label_target.label_cell_revision}"
+              }
+            ],
             "writes_refs": ["cell:A${steps.insert_summary_row.summary_row_number}"],
             "on": {
               "success": "end",
@@ -547,7 +615,7 @@
           {
             "id": "write_single_sum",
             "description": "Write a SUM formula in one column of the summary row",
-            "entry_point": "write_formula",
+            "entry_point": "read_formula_target",
             "inputs": [
               { "name": "sheet", "type": "string", "required": true, "description": "Sheet name" },
               { "name": "column", "type": "string", "required": true, "description": "Column letter" },
@@ -556,6 +624,17 @@
               { "name": "summary_row", "type": "integer", "required": true, "description": "Summary row number" }
             ],
             "steps": [
+              {
+                "id": "read_formula_target",
+                "kind": "observe",
+                "description": "Read the current revision of the target summary cell before writing the formula",
+                "reads_refs": ["cell:${inputs.column}${inputs.summary_row}"],
+                "emits": ["target_cell_revision"],
+                "on": {
+                  "success": "write_formula",
+                  "failure": "end"
+                }
+              },
               {
                 "id": "write_formula",
                 "kind": "mutate",
@@ -566,6 +645,13 @@
                   "address": "${inputs.column}${inputs.summary_row}",
                   "value": "=SUM(${inputs.column}${inputs.header_row + 1}:${inputs.column}${inputs.last_data_row})"
                 },
+                "expected_revisions": [
+                  {
+                    "entity_type": "cell",
+                    "ref": "cell:${inputs.column}${inputs.summary_row}",
+                    "revision": "${steps.read_formula_target.target_cell_revision}"
+                  }
+                ],
                 "writes_refs": ["cell:${inputs.column}${inputs.summary_row}"],
                 "on": {
                   "success": "end",
