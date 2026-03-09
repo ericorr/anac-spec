@@ -1,0 +1,809 @@
+{
+  "anac": "0.1.2",
+  "application": {
+    "name": "VectorForge",
+    "id": "com.example.vectorforge",
+    "version": "7.4.0",
+    "tier": "behavioral"
+  },
+  "emission": {
+    "triggers": [
+      {
+        "event": "selection_change",
+        "description": "User or agent changes the active selection"
+      },
+      {
+        "event": "tool_switched",
+        "description": "Active design tool changes"
+      },
+      {
+        "event": "entity_mutated",
+        "description": "Any layer, artboard, or group is modified"
+      },
+      {
+        "event": "mode_change",
+        "description": "Application mode transitions (e.g., design to preview)"
+      },
+      {
+        "event": "export_job_complete",
+        "description": "An asynchronous export job finishes or fails"
+      }
+    ],
+    "default_subscription": {
+      "subscription_id": "sub-default",
+      "mode": "selection",
+      "root_refs": [],
+      "entity_types": ["artboard", "layer", "export_job"],
+      "include_neighbors": true,
+      "include_recent_events": false,
+      "max_entities": 100
+    },
+    "max_rate": "PT0.1S",
+    "batch_window": "PT0.05S"
+  },
+  "static": {
+    "entities": [
+      {
+        "id": "artboard",
+        "name": "Artboard",
+        "description": "A bounded canvas containing design layers",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "width": { "type": "number" },
+            "height": { "type": "number" },
+            "layer_count": { "type": "integer" }
+          },
+          "required": ["name", "width", "height"]
+        },
+        "relationships": [
+          {
+            "target": "layer",
+            "cardinality": "one-to-many",
+            "name": "contains",
+            "description": "An artboard contains layers"
+          }
+        ],
+        "revision_tracked": true
+      },
+      {
+        "id": "layer",
+        "name": "Layer",
+        "description": "A visual element within an artboard: text, shape, group, or image",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "kind": { "type": "string", "enum": ["text", "shape", "group", "image", "component"] },
+            "visible": { "type": "boolean" },
+            "locked": { "type": "boolean" },
+            "x": { "type": "number" },
+            "y": { "type": "number" },
+            "width": { "type": "number" },
+            "height": { "type": "number" }
+          },
+          "required": ["name", "kind"]
+        },
+        "constraints": [
+          {
+            "predicate": "!(entity.data.locked == true && !('design.force_edit' in context.permissions))",
+            "description": "Locked layers cannot be edited without force-edit permission",
+            "severity": "error"
+          }
+        ],
+        "revision_tracked": true
+      },
+      {
+        "id": "export_job",
+        "name": "Export Job",
+        "description": "An asynchronous export operation producing file artifacts",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["pending", "running", "completed", "failed"] },
+            "formats": { "type": "array", "items": { "type": "string" } },
+            "output_refs": { "type": "array", "items": { "type": "string" } }
+          },
+          "required": ["status", "formats"]
+        },
+        "lifecycle": {
+          "states": ["pending", "running", "completed", "failed"],
+          "transitions": [
+            { "from": "pending", "to": "running", "via_action": null },
+            { "from": "running", "to": "completed", "via_action": null },
+            { "from": "running", "to": "failed", "via_action": null }
+          ]
+        },
+        "revision_tracked": false
+      }
+    ],
+    "actions": [
+      {
+        "id": "analyze_contrast",
+        "name": "Analyze Contrast",
+        "description": "Scan text layers on an artboard and return those failing WCAG AA contrast ratio",
+        "category": "accessibility",
+        "parameters": [
+          {
+            "name": "artboard_ref",
+            "type": "string",
+            "required": true,
+            "description": "Ref of the artboard to analyze"
+          }
+        ],
+        "result": {
+          "success": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "failing_layers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "layer_ref": { "type": "string" },
+                      "layer_revision": { "type": "string" },
+                      "current_ratio": { "type": "number" },
+                      "required_ratio": { "type": "number" },
+                      "recommended_token": { "type": ["string", "null"] }
+                    }
+                  }
+                },
+                "passing_count": { "type": "integer" }
+              }
+            },
+            "description": "Contrast analysis results with per-layer recommendations"
+          },
+          "failure": {
+            "codes": [
+              {
+                "code": "NO_TEXT_LAYERS",
+                "description": "Artboard contains no text layers",
+                "recovery_hint": "No action needed; skip contrast fixes",
+                "retryable": false
+              }
+            ]
+          }
+        },
+        "reads_types": ["artboard", "layer"],
+        "writes_types": [],
+        "accepts_expected_revision": false,
+        "reversibility": {
+          "undoable": false,
+          "destructive": false
+        }
+      },
+      {
+        "id": "apply_style_token",
+        "name": "Apply Style Token",
+        "description": "Apply a named design token (color, typography) to a text layer",
+        "category": "styling",
+        "parameters": [
+          {
+            "name": "layer_ref",
+            "type": "string",
+            "required": true,
+            "description": "Ref of the target text layer"
+          },
+          {
+            "name": "token",
+            "type": "string",
+            "required": true,
+            "description": "Design token identifier (e.g., 'text/on-surface/high-contrast')"
+          }
+        ],
+        "bindings": {
+          "layer": {
+            "entity_type": "layer",
+            "from": "param",
+            "path": "layer_ref"
+          }
+        },
+        "preconditions": [
+          {
+            "predicate": "bindings.layer.data.locked == false",
+            "description": "Layer must not be locked",
+            "severity": "hard"
+          },
+          {
+            "predicate": "bindings.layer.data.kind == 'text'",
+            "description": "Token application targets text layers only",
+            "severity": "hard"
+          }
+        ],
+        "side_effects": [
+          {
+            "description": "Layer's visual appearance changes (color, font weight, or size)",
+            "scope": "local",
+            "reversible": true
+          }
+        ],
+        "result": {
+          "success": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "layer_ref": { "type": "string" },
+                "new_revision": { "type": "string" },
+                "applied_token": { "type": "string" },
+                "new_contrast_ratio": { "type": "number" }
+              }
+            },
+            "description": "Style token applied to text layer"
+          },
+          "failure": {
+            "codes": [
+              {
+                "code": "TOKEN_NOT_FOUND",
+                "description": "The specified design token does not exist",
+                "recovery_hint": "Check available tokens or use a fallback",
+                "retryable": false
+              },
+              {
+                "code": "STALE_REVISION",
+                "description": "Layer was modified since last read",
+                "recovery_hint": "Re-read context and retry",
+                "retryable": true
+              }
+            ]
+          }
+        },
+        "reads_types": ["layer"],
+        "writes_types": ["layer"],
+        "accepts_expected_revision": true,
+        "reversibility": {
+          "undoable": true,
+          "destructive": false
+        }
+      },
+      {
+        "id": "snap_to_grid",
+        "name": "Snap to Grid",
+        "description": "Align a layer or group's position to the nearest grid intersection",
+        "category": "alignment",
+        "parameters": [
+          {
+            "name": "ref",
+            "type": "string",
+            "required": true,
+            "description": "Ref of the layer or group to snap"
+          },
+          {
+            "name": "grid_size",
+            "type": "integer",
+            "required": true,
+            "description": "Grid spacing in pixels",
+            "constraints": "params.grid_size > 0 && params.grid_size <= 128"
+          },
+          {
+            "name": "mode",
+            "type": "string",
+            "required": false,
+            "description": "Snapping strategy: nearest, floor, or ceil"
+          }
+        ],
+        "bindings": {
+          "layer": {
+            "entity_type": "layer",
+            "from": "param",
+            "path": "ref"
+          }
+        },
+        "preconditions": [
+          {
+            "predicate": "bindings.layer.data.locked == false",
+            "description": "Target must not be locked",
+            "severity": "hard"
+          }
+        ],
+        "side_effects": [
+          {
+            "description": "Layer position changes; child elements move with parent if target is a group",
+            "scope": "local",
+            "reversible": true
+          }
+        ],
+        "result": {
+          "success": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ref": { "type": "string" },
+                "new_revision": { "type": "string" },
+                "old_position": {
+                  "type": "object",
+                  "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+                },
+                "new_position": {
+                  "type": "object",
+                  "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+                }
+              }
+            },
+            "description": "Layer snapped to grid"
+          },
+          "failure": {
+            "codes": [
+              {
+                "code": "STALE_REVISION",
+                "description": "Layer was moved since last read",
+                "recovery_hint": "Re-read context and retry",
+                "retryable": true
+              }
+            ]
+          }
+        },
+        "reads_types": ["layer"],
+        "writes_types": ["layer"],
+        "accepts_expected_revision": true,
+        "reversibility": {
+          "undoable": true,
+          "destructive": false
+        }
+      },
+      {
+        "id": "export_asset",
+        "name": "Export Asset",
+        "description": "Start an asynchronous export of an artboard to specified formats",
+        "category": "export",
+        "parameters": [
+          {
+            "name": "artboard_ref",
+            "type": "string",
+            "required": true,
+            "description": "Ref of the artboard to export"
+          },
+          {
+            "name": "formats",
+            "type": "array",
+            "required": true,
+            "description": "Output formats: svg, png, pdf, webp"
+          },
+          {
+            "name": "destination",
+            "type": "string",
+            "required": true,
+            "description": "'staging' for preview, 'published' for direct publish"
+          }
+        ],
+        "bindings": {
+          "artboard": {
+            "entity_type": "artboard",
+            "from": "param",
+            "path": "artboard_ref"
+          }
+        },
+        "preconditions": [
+          {
+            "predicate": "'asset.export' in context.permissions",
+            "description": "User must have export permission",
+            "severity": "hard"
+          }
+        ],
+        "side_effects": [
+          {
+            "description": "Creates an export job; output files written to staging or published location",
+            "scope": "external",
+            "reversible": true
+          }
+        ],
+        "result": {
+          "success": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "export_job_id": { "type": "string" },
+                "export_job_ref": { "type": "string" },
+                "status": { "type": "string" }
+              }
+            },
+            "description": "Export job started"
+          },
+          "failure": {
+            "codes": [
+              {
+                "code": "STALE_REVISION",
+                "description": "Artboard was modified since last read",
+                "recovery_hint": "Re-read context; re-export if content changed",
+                "retryable": true
+              }
+            ]
+          }
+        },
+        "reads_types": ["artboard", "layer"],
+        "writes_types": [],
+        "accepts_expected_revision": true,
+        "reversibility": {
+          "undoable": false,
+          "destructive": false
+        }
+      },
+      {
+        "id": "publish_asset",
+        "name": "Publish Asset",
+        "description": "Replace the current published asset with a staged export",
+        "category": "publishing",
+        "parameters": [
+          {
+            "name": "export_job_id",
+            "type": "string",
+            "required": true,
+            "description": "ID of the completed export job"
+          },
+          {
+            "name": "replace_current",
+            "type": "boolean",
+            "required": true,
+            "description": "Whether to replace the currently published version"
+          }
+        ],
+        "bindings": {
+          "export_job": {
+            "entity_type": "export_job",
+            "from": "param",
+            "path": "export_job_id"
+          }
+        },
+        "preconditions": [
+          {
+            "predicate": "'asset.publish' in context.permissions",
+            "description": "User must have publish permission",
+            "severity": "hard"
+          }
+        ],
+        "side_effects": [
+          {
+            "description": "Replaces live published asset; previous version is archived",
+            "scope": "external",
+            "reversible": true
+          }
+        ],
+        "result": {
+          "success": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "published_refs": { "type": "array", "items": { "type": "string" } },
+                "previous_version_archived": { "type": "boolean" }
+              }
+            },
+            "description": "Asset published, previous version archived"
+          },
+          "failure": {
+            "codes": [
+              {
+                "code": "JOB_NOT_COMPLETE",
+                "description": "Export job has not finished",
+                "recovery_hint": "Wait for export to complete before publishing",
+                "retryable": true
+              },
+              {
+                "code": "PERMISSION_DENIED",
+                "description": "User lacks publish permission",
+                "recovery_hint": "Request publish access from project owner",
+                "retryable": false
+              }
+            ]
+          }
+        },
+        "reads_types": ["export_job"],
+        "writes_types": [],
+        "accepts_expected_revision": false,
+        "reversibility": {
+          "undoable": true,
+          "undo_action": "restore_previous_asset",
+          "destructive": true
+        }
+      }
+    ],
+    "workflows": [
+      {
+        "id": "refresh_accessible_asset",
+        "name": "Refresh Accessible Asset",
+        "description": "Fix contrast issues, align elements, export, and publish with approval",
+        "goal": "Produce approved, accessibility-compliant export variants from the selected artboard without clobbering concurrent edits",
+        "kind": "state_machine",
+        "entry_point": "validate_selection",
+        "lease_ttl": "PT2M",
+        "max_context_refreshes": 3,
+        "rollback": {
+          "strategy": "undo-stack",
+          "description": "Style token applications and grid alignment are undoable. Export staging can be discarded. If publish succeeded, use restore_previous_asset."
+        },
+        "steps": [
+          {
+            "id": "validate_selection",
+            "kind": "observe",
+            "description": "Confirm exactly one artboard and at least one layer are selected",
+            "reads_refs": ["context_frame"],
+            "emits": ["artboard_ref", "artboard_revision", "group_ref", "group_revision"],
+            "predicate": "size(context.selection.filter(s, s.entity_type == 'artboard')) == 1 && size(context.selection.filter(s, s.entity_type == 'layer')) >= 1",
+            "on": {
+              "success": "audit_contrast",
+              "failure": "abort_invalid_selection"
+            }
+          },
+          {
+            "id": "audit_contrast",
+            "kind": "observe",
+            "description": "Analyze text layers for WCAG AA contrast compliance",
+            "action": "analyze_contrast",
+            "inputs": {
+              "artboard_ref": "${steps.validate_selection.artboard_ref}"
+            },
+            "reads_refs": ["artboard:${steps.validate_selection.artboard_ref}"],
+            "emits": ["failing_text_layers", "passing_count"],
+            "on": {
+              "success": "decide_needs_fixes",
+              "failure": "abort_analysis_failed"
+            }
+          },
+          {
+            "id": "decide_needs_fixes",
+            "kind": "decide",
+            "description": "Are there any text layers failing contrast?",
+            "predicate": "size(steps.audit_contrast.failing_text_layers) > 0",
+            "on_true": "apply_accessibility_tokens",
+            "on_false": "align_icon_group"
+          },
+          {
+            "id": "apply_accessibility_tokens",
+            "kind": "subflow",
+            "description": "Apply accessible style tokens to each failing text layer",
+            "workflow_ref": "fix_single_text_layer",
+            "foreach": "steps.audit_contrast.failing_text_layers",
+            "inputs": {
+              "layer_ref": "${current.layer_ref}",
+              "layer_revision": "${current.layer_revision}",
+              "recommended_token": "${current.recommended_token}"
+            },
+            "continue_on_error": true,
+            "on": {
+              "success": "align_icon_group",
+              "partial": "confirm_partial_fix",
+              "failure": "confirm_partial_fix",
+              "stale_revision": "refresh_context"
+            }
+          },
+          {
+            "id": "confirm_partial_fix",
+            "kind": "confirm",
+            "description": "Some text layers could not be auto-fixed; ask user whether to proceed",
+            "prompt": "Some text layers could not be automatically fixed for contrast. Continue with export anyway, or stop to review manually?",
+            "on": {
+              "approved": "align_icon_group",
+              "rejected": "end"
+            }
+          },
+          {
+            "id": "align_icon_group",
+            "kind": "mutate",
+            "description": "Snap the selected icon group to the 8px grid",
+            "action": "snap_to_grid",
+            "inputs": {
+              "ref": "${steps.validate_selection.group_ref}",
+              "grid_size": 8,
+              "mode": "nearest"
+            },
+            "expected_revisions": [
+              {
+                "entity_type": "layer",
+                "ref": "${steps.validate_selection.group_ref}",
+                "revision": "${steps.validate_selection.group_revision}"
+              }
+            ],
+            "writes_refs": ["layer:${steps.validate_selection.group_ref}"],
+            "emits": ["new_group_revision"],
+            "on": {
+              "success": "start_export",
+              "failure": "abort_alignment_failed",
+              "stale_revision": "refresh_context"
+            }
+          },
+          {
+            "id": "start_export",
+            "kind": "mutate",
+            "description": "Begin async export of artboard as SVG and PNG to staging",
+            "action": "export_asset",
+            "inputs": {
+              "artboard_ref": "${steps.validate_selection.artboard_ref}",
+              "formats": ["svg", "png"],
+              "destination": "staging"
+            },
+            "expected_revisions": [
+              {
+                "entity_type": "artboard",
+                "ref": "${steps.validate_selection.artboard_ref}",
+                "revision": "${steps.validate_selection.artboard_revision}"
+              }
+            ],
+            "emits": ["export_job_id", "export_job_ref"],
+            "on": {
+              "success": "wait_for_export",
+              "failure": "abort_export_failed",
+              "stale_revision": "refresh_context"
+            }
+          },
+          {
+            "id": "wait_for_export",
+            "kind": "wait",
+            "description": "Wait for the export job to complete or fail",
+            "watch_binding": {
+              "entity_type": "export_job",
+              "ref_from": "step_output",
+              "path": "steps.start_export.export_job_ref"
+            },
+            "until": "watch.data.status in ['completed', 'failed']",
+            "timeout": "PT45S",
+            "on": {
+              "success": "confirm_publish",
+              "timeout": "abort_export_timeout",
+              "failure": "abort_export_failed"
+            }
+          },
+          {
+            "id": "confirm_publish",
+            "kind": "confirm",
+            "description": "Get approval before replacing the live asset",
+            "prompt": "Export complete. Replace the current published asset with the new SVG and PNG variants?",
+            "payload": {
+              "preview_refs": [
+                "job:${steps.start_export.export_job_id}:svg",
+                "job:${steps.start_export.export_job_id}:png"
+              ]
+            },
+            "on": {
+              "approved": "publish",
+              "rejected": "end"
+            }
+          },
+          {
+            "id": "publish",
+            "kind": "mutate",
+            "description": "Replace the live published asset with the staged export",
+            "action": "publish_asset",
+            "inputs": {
+              "export_job_id": "${steps.start_export.export_job_id}",
+              "replace_current": true
+            },
+            "on": {
+              "success": "end",
+              "failure": "abort_publish_failed",
+              "stale_revision": "end"
+            }
+          },
+          {
+            "id": "refresh_context",
+            "kind": "observe",
+            "description": "Re-read state after a stale revision; bounded by max_context_refreshes",
+            "reads_refs": ["context_frame"],
+            "predicate": "workflow.context_refresh_count < workflow.max_context_refreshes",
+            "on": {
+              "success": "validate_selection",
+              "failure": "abort_too_many_retries"
+            }
+          },
+          {
+            "id": "abort_invalid_selection",
+            "kind": "observe",
+            "description": "Abort: selection does not contain exactly one artboard and at least one layer",
+            "on": {
+              "success": "end",
+              "failure": "end"
+            }
+          },
+          {
+            "id": "abort_analysis_failed",
+            "kind": "observe",
+            "description": "Abort: contrast analysis failed",
+            "on": {
+              "success": "end",
+              "failure": "end"
+            }
+          },
+          {
+            "id": "abort_alignment_failed",
+            "kind": "observe",
+            "description": "Abort: grid alignment failed for non-revision reason",
+            "on": {
+              "success": "end",
+              "failure": "end"
+            }
+          },
+          {
+            "id": "abort_export_failed",
+            "kind": "observe",
+            "description": "Abort: export job failed or could not be started",
+            "on": {
+              "success": "end",
+              "failure": "end"
+            }
+          },
+          {
+            "id": "abort_export_timeout",
+            "kind": "observe",
+            "description": "Abort: export job did not complete within timeout",
+            "on": {
+              "success": "end",
+              "failure": "end"
+            }
+          },
+          {
+            "id": "abort_publish_failed",
+            "kind": "observe",
+            "description": "Abort: publish failed",
+            "on": {
+              "success": "end",
+              "failure": "end"
+            }
+          },
+          {
+            "id": "abort_too_many_retries",
+            "kind": "observe",
+            "description": "Abort: exceeded max context refresh retries",
+            "on": {
+              "success": "end",
+              "failure": "end"
+            }
+          }
+        ],
+        "subflows": [
+          {
+            "id": "fix_single_text_layer",
+            "description": "Apply the recommended accessible style token to one text layer, with manual-review fallback",
+            "entry_point": "decide_has_recommendation",
+            "inputs": [
+              { "name": "layer_ref", "type": "string", "required": true, "description": "Ref of the failing text layer" },
+              { "name": "layer_revision", "type": "string", "required": true, "description": "Current revision of the layer" },
+              { "name": "recommended_token", "type": "string", "required": false, "description": "Suggested accessible token, may be null" }
+            ],
+            "steps": [
+              {
+                "id": "decide_has_recommendation",
+                "kind": "decide",
+                "description": "Does the contrast analyzer have a recommended token?",
+                "predicate": "inputs.recommended_token != null && inputs.recommended_token != ''",
+                "on_true": "apply_token",
+                "on_false": "confirm_skip"
+              },
+              {
+                "id": "apply_token",
+                "kind": "mutate",
+                "description": "Apply the recommended design token to the text layer",
+                "action": "apply_style_token",
+                "inputs": {
+                  "layer_ref": "${inputs.layer_ref}",
+                  "token": "${inputs.recommended_token}"
+                },
+                "expected_revisions": [
+                  {
+                    "entity_type": "layer",
+                    "ref": "${inputs.layer_ref}",
+                    "revision": "${inputs.layer_revision}"
+                  }
+                ],
+                "writes_refs": ["layer:${inputs.layer_ref}"],
+                "on": {
+                  "success": "end",
+                  "failure": "confirm_skip",
+                  "stale_revision": "end"
+                }
+              },
+              {
+                "id": "confirm_skip",
+                "kind": "confirm",
+                "description": "No automatic fix available for this layer; ask whether to skip",
+                "prompt": "No safe style token was found for this text layer. Skip it and continue?",
+                "on": {
+                  "approved": "end",
+                  "rejected": "end"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,1674 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/anac/schema/anac-core-0.1.2.schema.json",
+  "title": "ANAC Core 0.1.2",
+  "type": "object",
+  "required": [
+    "anac",
+    "application",
+    "emission",
+    "static"
+  ],
+  "properties": {
+    "anac": {
+      "type": "string",
+      "const": "0.1.2"
+    },
+    "application": {
+      "$ref": "#/$defs/Application"
+    },
+    "emission": {
+      "$ref": "#/$defs/Emission"
+    },
+    "static": {
+      "$ref": "#/$defs/StaticManifest"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "Application": {
+      "type": "object",
+      "required": [
+        "name",
+        "id",
+        "version",
+        "tier"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tier": {
+          "type": "string",
+          "enum": [
+            "minimal",
+            "semantic",
+            "behavioral",
+            "native"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Emission": {
+      "type": "object",
+      "required": [
+        "triggers",
+        "default_subscription",
+        "max_rate",
+        "batch_window"
+      ],
+      "properties": {
+        "triggers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/EmissionTrigger"
+          }
+        },
+        "default_subscription": {
+          "$ref": "#/$defs/ContextSubscription"
+        },
+        "max_rate": {
+          "$ref": "#/$defs/DurationString"
+        },
+        "batch_window": {
+          "$ref": "#/$defs/DurationString"
+        }
+      },
+      "additionalProperties": false
+    },
+    "EmissionTrigger": {
+      "type": "object",
+      "required": [
+        "event",
+        "description"
+      ],
+      "properties": {
+        "event": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "ContextSubscription": {
+      "type": "object",
+      "required": [
+        "subscription_id",
+        "mode",
+        "root_refs",
+        "entity_types",
+        "include_neighbors",
+        "include_recent_events",
+        "max_entities"
+      ],
+      "properties": {
+        "subscription_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "default",
+            "selection",
+            "workflow",
+            "explicit"
+          ]
+        },
+        "root_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "entity_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "include_neighbors": {
+          "type": "boolean"
+        },
+        "include_recent_events": {
+          "type": "boolean"
+        },
+        "max_entities": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "StaticManifest": {
+      "type": "object",
+      "required": [
+        "entities",
+        "actions",
+        "workflows"
+      ],
+      "properties": {
+        "entities": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/EntityDefinition"
+          }
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ActionDefinition"
+          }
+        },
+        "workflows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WorkflowDefinition"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "EntityDefinition": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "description",
+        "schema",
+        "revision_tracked"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema": {
+          "type": "object"
+        },
+        "relationships": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Relationship"
+          }
+        },
+        "lifecycle": {
+          "$ref": "#/$defs/Lifecycle"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Constraint"
+          }
+        },
+        "revision_tracked": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Relationship": {
+      "type": "object",
+      "required": [
+        "target",
+        "cardinality",
+        "name",
+        "description"
+      ],
+      "properties": {
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cardinality": {
+          "type": "string",
+          "enum": [
+            "one-to-one",
+            "one-to-many",
+            "many-to-many"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "Lifecycle": {
+      "type": "object",
+      "required": [
+        "states"
+      ],
+      "properties": {
+        "states": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LifecycleTransition"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "LifecycleTransition": {
+      "type": "object",
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1
+        },
+        "via_action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Constraint": {
+      "type": "object",
+      "required": [
+        "predicate",
+        "description",
+        "severity"
+      ],
+      "properties": {
+        "predicate": {
+          "$ref": "#/$defs/CelExpression"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ActionDefinition": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "description",
+        "category",
+        "parameters",
+        "result",
+        "reads_types",
+        "writes_types",
+        "accepts_expected_revision",
+        "reversibility"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          }
+        },
+        "bindings": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Binding"
+          }
+        },
+        "preconditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PredicateRule"
+          }
+        },
+        "postconditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PostconditionRule"
+          }
+        },
+        "side_effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SideEffect"
+          }
+        },
+        "result": {
+          "$ref": "#/$defs/ActionResultContract"
+        },
+        "reads_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "writes_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "accepts_expected_revision": {
+          "type": "boolean"
+        },
+        "reversibility": {
+          "$ref": "#/$defs/Reversibility"
+        },
+        "context_requirements": {
+          "$ref": "#/$defs/ContextRequirements"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Parameter": {
+      "type": "object",
+      "required": [
+        "name",
+        "type",
+        "required",
+        "description"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {},
+        "required": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "constraints": {
+          "$ref": "#/$defs/CelExpression"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Binding": {
+      "type": "object",
+      "required": [
+        "entity_type",
+        "from",
+        "path"
+      ],
+      "properties": {
+        "entity_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from": {
+          "type": "string",
+          "enum": [
+            "param",
+            "selection",
+            "context_entity",
+            "step_output",
+            "input"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "PredicateRule": {
+      "type": "object",
+      "required": [
+        "predicate",
+        "description",
+        "severity"
+      ],
+      "properties": {
+        "predicate": {
+          "$ref": "#/$defs/CelExpression"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "hard",
+            "soft"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "PostconditionRule": {
+      "type": "object",
+      "required": [
+        "predicate",
+        "description"
+      ],
+      "properties": {
+        "predicate": {
+          "$ref": "#/$defs/CelExpression"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "SideEffect": {
+      "type": "object",
+      "required": [
+        "description",
+        "scope",
+        "reversible"
+      ],
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "string",
+          "enum": [
+            "local",
+            "document",
+            "project",
+            "external"
+          ]
+        },
+        "reversible": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ActionResultContract": {
+      "type": "object",
+      "required": [
+        "success",
+        "failure"
+      ],
+      "properties": {
+        "success": {
+          "type": "object",
+          "required": [
+            "schema",
+            "description"
+          ],
+          "properties": {
+            "schema": {
+              "type": "object"
+            },
+            "description": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "failure": {
+          "type": "object",
+          "required": [
+            "codes"
+          ],
+          "properties": {
+            "codes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FailureCode"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "FailureCode": {
+      "type": "object",
+      "required": [
+        "code",
+        "description",
+        "recovery_hint",
+        "retryable"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recovery_hint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retryable": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Reversibility": {
+      "type": "object",
+      "required": [
+        "undoable",
+        "destructive"
+      ],
+      "properties": {
+        "undoable": {
+          "type": "boolean"
+        },
+        "undo_action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "undo_window": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "destructive": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ContextRequirements": {
+      "type": "object",
+      "properties": {
+        "required_state": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "required_selection": {
+          "$ref": "#/$defs/SelectionRequirement"
+        },
+        "required_permissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "SelectionRequirement": {
+      "type": "object",
+      "required": [
+        "entity_type",
+        "min_count"
+      ],
+      "properties": {
+        "entity_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "min_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_count": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "WorkflowDefinition": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "description",
+        "goal",
+        "kind",
+        "entry_point",
+        "lease_ttl",
+        "steps"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "goal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "const": "state_machine"
+        },
+        "entry_point": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lease_ttl": {
+          "$ref": "#/$defs/DurationString"
+        },
+        "max_context_refreshes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/WorkflowStep"
+          }
+        },
+        "subflows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SubflowDefinition"
+          }
+        },
+        "rollback": {
+          "$ref": "#/$defs/Rollback"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Rollback": {
+      "type": "object",
+      "required": [
+        "strategy",
+        "description"
+      ],
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "undo-stack",
+            "checkpoint",
+            "manual",
+            "none"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "WorkflowStep": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ObserveStep"
+        },
+        {
+          "$ref": "#/$defs/MutateStep"
+        },
+        {
+          "$ref": "#/$defs/DecideStep"
+        },
+        {
+          "$ref": "#/$defs/ConfirmStep"
+        },
+        {
+          "$ref": "#/$defs/WaitStep"
+        },
+        {
+          "$ref": "#/$defs/SubflowStep"
+        }
+      ]
+    },
+    "ObserveStep": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "description",
+        "on"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "const": "observe"
+        },
+        "description": {
+          "type": "string"
+        },
+        "action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "inputs": {
+          "type": "object"
+        },
+        "reads_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "bindings": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Binding"
+          }
+        },
+        "emits": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "predicate": {
+          "$ref": "#/$defs/CelExpression"
+        },
+        "on": {
+          "$ref": "#/$defs/ObserveTransitions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "MutateStep": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "description",
+        "action",
+        "inputs",
+        "on"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "const": "mutate"
+        },
+        "description": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "inputs": {
+          "type": "object"
+        },
+        "reads_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "writes_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expected_revisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EntityRevisionRef"
+          }
+        },
+        "bindings": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Binding"
+          }
+        },
+        "emits": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "on": {
+          "$ref": "#/$defs/MutateTransitions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "DecideStep": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "description",
+        "predicate",
+        "on_true",
+        "on_false"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "const": "decide"
+        },
+        "description": {
+          "type": "string"
+        },
+        "predicate": {
+          "$ref": "#/$defs/CelExpression"
+        },
+        "on_true": {
+          "$ref": "#/$defs/StepTarget"
+        },
+        "on_false": {
+          "$ref": "#/$defs/StepTarget"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ConfirmStep": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "description",
+        "prompt",
+        "on"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "const": "confirm"
+        },
+        "description": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "payload": {},
+        "on": {
+          "$ref": "#/$defs/ConfirmTransitions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "WaitStep": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "description",
+        "watch_binding",
+        "until",
+        "timeout",
+        "on"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "const": "wait"
+        },
+        "description": {
+          "type": "string"
+        },
+        "watch_binding": {
+          "$ref": "#/$defs/WatchBinding"
+        },
+        "until": {
+          "$ref": "#/$defs/CelExpression"
+        },
+        "timeout": {
+          "$ref": "#/$defs/DurationString"
+        },
+        "on": {
+          "$ref": "#/$defs/WaitTransitions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SubflowStep": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "description",
+        "workflow_ref",
+        "on"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "const": "subflow"
+        },
+        "description": {
+          "type": "string"
+        },
+        "workflow_ref": {
+          "type": "string"
+        },
+        "foreach": {
+          "$ref": "#/$defs/CelExpression"
+        },
+        "inputs": {
+          "type": "object"
+        },
+        "continue_on_error": {
+          "type": "boolean"
+        },
+        "on": {
+          "$ref": "#/$defs/SubflowTransitions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ObserveTransitions": {
+      "type": "object",
+      "required": [
+        "success",
+        "failure"
+      ],
+      "properties": {
+        "success": {
+          "$ref": "#/$defs/StepTarget"
+        },
+        "failure": {
+          "$ref": "#/$defs/StepTarget"
+        }
+      },
+      "additionalProperties": false
+    },
+    "MutateTransitions": {
+      "type": "object",
+      "required": [
+        "success",
+        "failure",
+        "stale_revision"
+      ],
+      "properties": {
+        "success": {
+          "$ref": "#/$defs/StepTarget"
+        },
+        "failure": {
+          "$ref": "#/$defs/StepTarget"
+        },
+        "stale_revision": {
+          "$ref": "#/$defs/StepTarget"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ConfirmTransitions": {
+      "type": "object",
+      "required": [
+        "approved",
+        "rejected"
+      ],
+      "properties": {
+        "approved": {
+          "$ref": "#/$defs/StepTarget"
+        },
+        "rejected": {
+          "$ref": "#/$defs/StepTarget"
+        }
+      },
+      "additionalProperties": false
+    },
+    "WaitTransitions": {
+      "type": "object",
+      "required": [
+        "success",
+        "timeout",
+        "failure"
+      ],
+      "properties": {
+        "success": {
+          "$ref": "#/$defs/StepTarget"
+        },
+        "timeout": {
+          "$ref": "#/$defs/StepTarget"
+        },
+        "failure": {
+          "$ref": "#/$defs/StepTarget"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SubflowTransitions": {
+      "type": "object",
+      "required": [
+        "success",
+        "failure"
+      ],
+      "properties": {
+        "success": {
+          "$ref": "#/$defs/StepTarget"
+        },
+        "partial": {
+          "$ref": "#/$defs/StepTarget"
+        },
+        "failure": {
+          "$ref": "#/$defs/StepTarget"
+        },
+        "stale_revision": {
+          "$ref": "#/$defs/StepTarget"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SubflowDefinition": {
+      "type": "object",
+      "required": [
+        "id",
+        "description",
+        "entry_point",
+        "steps"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "entry_point": {
+          "type": "string"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/WorkflowStep"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "WatchBinding": {
+      "type": "object",
+      "required": [
+        "entity_type",
+        "ref_from",
+        "path"
+      ],
+      "properties": {
+        "entity_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ref_from": {
+          "type": "string",
+          "enum": [
+            "step_output",
+            "input",
+            "binding"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "StepTarget": {
+      "type": "string",
+      "minLength": 1
+    },
+    "EntityRevisionRef": {
+      "type": "object",
+      "required": [
+        "entity_type",
+        "ref",
+        "revision"
+      ],
+      "properties": {
+        "entity_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "DurationString": {
+      "type": "string",
+      "pattern": "^P(?!$).+"
+    },
+    "CelExpression": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ContextFrame": {
+      "type": "object",
+      "required": [
+        "frame_id",
+        "emitted_at",
+        "trigger",
+        "subscription_id",
+        "scope",
+        "application_state",
+        "selection",
+        "permissions",
+        "available_actions"
+      ],
+      "properties": {
+        "frame_id": {
+          "type": "string"
+        },
+        "emitted_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "trigger": {
+          "type": "string"
+        },
+        "subscription_id": {
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/ContextScope"
+        },
+        "application_state": {
+          "$ref": "#/$defs/ApplicationState"
+        },
+        "selection": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EntityRevisionRef"
+          }
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "available_actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScopedAction"
+          }
+        },
+        "active_workflows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WorkflowRuntime"
+          }
+        },
+        "entity_snapshots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EntitySnapshot"
+          }
+        },
+        "recent_events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Event"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Warning"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ActionResultRuntime": {
+      "type": "object",
+      "required": [
+        "action_id",
+        "status",
+        "timestamp",
+        "warnings",
+        "undo_token"
+      ],
+      "properties": {
+        "action_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "partial",
+            "failure",
+            "pending"
+          ]
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "data": {
+          "type": "object"
+        },
+        "state_delta": {
+          "type": "object",
+          "properties": {
+            "created": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/EntityRevisionRef"
+              }
+            },
+            "modified": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/EntityRevisionRef"
+              }
+            },
+            "deleted": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/EntityRevisionRef"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "user_visible_effect": {
+          "type": "string"
+        },
+        "error": {
+          "type": "object",
+          "required": [
+            "code",
+            "message",
+            "retryable",
+            "recovery_options",
+            "stale_entities"
+          ],
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "retryable": {
+              "type": "boolean"
+            },
+            "recovery_options": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RecoveryOption"
+              }
+            },
+            "stale_entities": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/EntityRevisionRef"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "undo_token": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "RecoveryOption": {
+      "type": "object",
+      "required": [
+        "action_id",
+        "description"
+      ],
+      "properties": {
+        "action_id": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ContextScope": {
+      "type": "object",
+      "required": [
+        "mode",
+        "root_refs",
+        "entity_count",
+        "truncated",
+        "next_cursor"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "default",
+            "selection",
+            "workflow",
+            "explicit"
+          ]
+        },
+        "root_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "entity_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ApplicationState": {
+      "type": "object",
+      "required": [
+        "screen",
+        "mode"
+      ],
+      "properties": {
+        "screen": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "ScopedAction": {
+      "type": "object",
+      "required": [
+        "action_id",
+        "relevance",
+        "reason",
+        "preconditions_met"
+      ],
+      "properties": {
+        "action_id": {
+          "type": "string"
+        },
+        "relevance": {
+          "type": "string",
+          "enum": [
+            "primary",
+            "secondary",
+            "available"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "preconditions_met": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "WorkflowRuntime": {
+      "type": "object",
+      "required": [
+        "workflow_id",
+        "lease_id",
+        "current_step",
+        "progress",
+        "can_rollback",
+        "context_refresh_count"
+      ],
+      "properties": {
+        "workflow_id": {
+          "type": "string"
+        },
+        "lease_id": {
+          "type": "string"
+        },
+        "current_step": {
+          "type": "string"
+        },
+        "progress": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "next_action_hint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "can_rollback": {
+          "type": "boolean"
+        },
+        "context_refresh_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "EntitySnapshot": {
+      "type": "object",
+      "required": [
+        "entity_type",
+        "ref",
+        "revision",
+        "data"
+      ],
+      "properties": {
+        "entity_type": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Event": {
+      "type": "object",
+      "required": [
+        "timestamp",
+        "actor",
+        "summary"
+      ],
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "actor": {
+          "type": "string",
+          "enum": [
+            "user",
+            "agent",
+            "system"
+          ]
+        },
+        "action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "result": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Warning": {
+      "type": "object",
+      "required": [
+        "severity",
+        "message"
+      ],
+      "properties": {
+        "severity": {
+          "type": "string",
+          "enum": [
+            "info",
+            "warning",
+            "error"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "related_entity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntityRevisionRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "suggested_action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

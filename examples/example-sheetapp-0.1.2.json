@@ -1,0 +1,582 @@
+{
+  "anac": "0.1.2",
+  "application": {
+    "name": "SheetApp",
+    "id": "com.example.sheetapp",
+    "version": "4.2.0",
+    "tier": "behavioral"
+  },
+  "emission": {
+    "triggers": [
+      {
+        "event": "cell_blur",
+        "description": "User finishes editing a cell"
+      },
+      {
+        "event": "selection_change",
+        "description": "Selected cell or range changes"
+      },
+      {
+        "event": "sheet_change",
+        "description": "Active sheet switches"
+      },
+      {
+        "event": "entity_mutated",
+        "description": "Any cell, row, or range is modified"
+      }
+    ],
+    "default_subscription": {
+      "subscription_id": "sub-default",
+      "mode": "selection",
+      "root_refs": [],
+      "entity_types": ["sheet", "cell"],
+      "include_neighbors": true,
+      "include_recent_events": false,
+      "max_entities": 200
+    },
+    "max_rate": "PT0.2S",
+    "batch_window": "PT0.1S"
+  },
+  "static": {
+    "entities": [
+      {
+        "id": "workbook",
+        "name": "Workbook",
+        "description": "A file containing one or more sheets",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "sheet_count": { "type": "integer" }
+          },
+          "required": ["name"]
+        },
+        "relationships": [
+          {
+            "target": "sheet",
+            "cardinality": "one-to-many",
+            "name": "contains",
+            "description": "A workbook contains one or more sheets"
+          }
+        ],
+        "revision_tracked": false
+      },
+      {
+        "id": "sheet",
+        "name": "Sheet",
+        "description": "A single grid of cells within a workbook",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "used_range": { "type": "string" },
+            "is_protected": { "type": "boolean" },
+            "last_data_row": { "type": "integer" },
+            "has_header_row": { "type": "boolean" },
+            "column_types": {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            }
+          },
+          "required": ["name"]
+        },
+        "relationships": [
+          {
+            "target": "cell",
+            "cardinality": "one-to-many",
+            "name": "contains",
+            "description": "A sheet contains cells"
+          }
+        ],
+        "revision_tracked": true
+      },
+      {
+        "id": "cell",
+        "name": "Cell",
+        "description": "A single cell identified by column letter and row number",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "address": { "type": "string" },
+            "value": {},
+            "formula": { "type": ["string", "null"] },
+            "is_locked": { "type": "boolean" },
+            "dependencies": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "required": ["address"]
+        },
+        "constraints": [
+          {
+            "predicate": "!(entity.data.is_locked == true && !('edit_protected' in context.permissions))",
+            "description": "Locked cells cannot be edited without sheet protection override",
+            "severity": "error"
+          }
+        ],
+        "revision_tracked": true
+      }
+    ],
+    "actions": [
+      {
+        "id": "set_cell_value",
+        "name": "Set Cell Value",
+        "description": "Write a value or formula to a single cell",
+        "category": "editing",
+        "parameters": [
+          {
+            "name": "sheet",
+            "type": "string",
+            "required": true,
+            "description": "Sheet name"
+          },
+          {
+            "name": "address",
+            "type": "string",
+            "required": true,
+            "description": "Cell address (e.g., 'C15')"
+          },
+          {
+            "name": "value",
+            "type": "any",
+            "required": true,
+            "description": "Value or formula. Formulas must start with '='"
+          }
+        ],
+        "bindings": {
+          "cell": {
+            "entity_type": "cell",
+            "from": "param",
+            "path": "address"
+          },
+          "sheet": {
+            "entity_type": "sheet",
+            "from": "param",
+            "path": "sheet"
+          }
+        },
+        "preconditions": [
+          {
+            "predicate": "bindings.cell.data.is_locked == false",
+            "description": "Cell must not be in a locked range",
+            "severity": "hard"
+          },
+          {
+            "predicate": "bindings.sheet.data.is_protected == false || 'edit_protected' in context.permissions",
+            "description": "Sheet protection must be off or user must have override permission",
+            "severity": "hard"
+          }
+        ],
+        "postconditions": [
+          {
+            "predicate": "bindings.cell.data.value == params.value || bindings.cell.data.formula == params.value",
+            "description": "Cell contains the specified value or formula"
+          }
+        ],
+        "side_effects": [
+          {
+            "description": "All cells referencing this cell will recalculate",
+            "scope": "document",
+            "reversible": true
+          },
+          {
+            "description": "Charts using this cell's data range will update",
+            "scope": "document",
+            "reversible": true
+          }
+        ],
+        "result": {
+          "success": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "address": { "type": "string" },
+                "computed_value": {},
+                "affected_cells": { "type": "integer" }
+              }
+            },
+            "description": "Cell updated with new value"
+          },
+          "failure": {
+            "codes": [
+              {
+                "code": "CIRCULAR_REF",
+                "description": "Formula creates a circular reference",
+                "recovery_hint": "Revise formula to avoid referencing cells that depend on this cell",
+                "retryable": false
+              },
+              {
+                "code": "LOCKED_CELL",
+                "description": "Cell is in a protected range",
+                "recovery_hint": "Unlock the range first or choose a different cell",
+                "retryable": false
+              },
+              {
+                "code": "STALE_REVISION",
+                "description": "Cell was modified since last read",
+                "recovery_hint": "Re-read context and retry",
+                "retryable": true
+              }
+            ]
+          }
+        },
+        "reads_types": ["cell", "sheet"],
+        "writes_types": ["cell"],
+        "accepts_expected_revision": true,
+        "reversibility": {
+          "undoable": true,
+          "destructive": false
+        }
+      },
+      {
+        "id": "insert_row",
+        "name": "Insert Row",
+        "description": "Insert one or more empty rows at the specified position",
+        "category": "structure",
+        "parameters": [
+          {
+            "name": "sheet",
+            "type": "string",
+            "required": true,
+            "description": "Sheet name"
+          },
+          {
+            "name": "before_row",
+            "type": "integer",
+            "required": true,
+            "description": "New rows are inserted above this row number",
+            "constraints": "params.before_row >= 1"
+          },
+          {
+            "name": "count",
+            "type": "integer",
+            "required": false,
+            "description": "Number of rows to insert. Default: 1"
+          }
+        ],
+        "side_effects": [
+          {
+            "description": "All row references in formulas at or below insertion point shift down",
+            "scope": "document",
+            "reversible": true
+          },
+          {
+            "description": "Named ranges including or below the insertion point will adjust",
+            "scope": "document",
+            "reversible": true
+          }
+        ],
+        "result": {
+          "success": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "inserted_range": { "type": "string" },
+                "new_last_row": { "type": "integer" },
+                "summary_row_number": { "type": "integer" }
+              }
+            },
+            "description": "Rows inserted successfully"
+          },
+          "failure": {
+            "codes": [
+              {
+                "code": "OUT_OF_BOUNDS",
+                "description": "Row number exceeds sheet limits",
+                "recovery_hint": "Use a row number within the sheet's range",
+                "retryable": false
+              },
+              {
+                "code": "STALE_REVISION",
+                "description": "Sheet structure was modified since last read",
+                "recovery_hint": "Re-read context and retry",
+                "retryable": true
+              }
+            ]
+          }
+        },
+        "reads_types": ["sheet"],
+        "writes_types": ["sheet", "cell"],
+        "accepts_expected_revision": true,
+        "reversibility": {
+          "undoable": true,
+          "destructive": false
+        }
+      },
+      {
+        "id": "format_cells",
+        "name": "Format Cells",
+        "description": "Apply formatting to a range of cells",
+        "category": "formatting",
+        "parameters": [
+          {
+            "name": "sheet",
+            "type": "string",
+            "required": true,
+            "description": "Sheet name"
+          },
+          {
+            "name": "range",
+            "type": "string",
+            "required": true,
+            "description": "Cell range (e.g., 'A15:F15')"
+          },
+          {
+            "name": "format",
+            "type": "object",
+            "required": true,
+            "description": "Format properties: bold, italic, font_size, border_top, etc."
+          }
+        ],
+        "result": {
+          "success": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "range": { "type": "string" },
+                "applied_properties": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "description": "Formatting applied"
+          },
+          "failure": {
+            "codes": [
+              {
+                "code": "STALE_REVISION",
+                "description": "Target cells modified since last read",
+                "recovery_hint": "Re-read context and retry",
+                "retryable": true
+              }
+            ]
+          }
+        },
+        "reads_types": ["cell"],
+        "writes_types": ["cell"],
+        "accepts_expected_revision": true,
+        "reversibility": {
+          "undoable": true,
+          "destructive": false
+        }
+      }
+    ],
+    "workflows": [
+      {
+        "id": "add_summary_row",
+        "name": "Add Summary Row to Table",
+        "description": "Append a row below an existing data table with aggregate formulas and formatting",
+        "goal": "A new row exists below the table with SUM formulas for specified columns, visually distinct from data rows",
+        "kind": "state_machine",
+        "entry_point": "read_table",
+        "lease_ttl": "PT30S",
+        "max_context_refreshes": 2,
+        "rollback": {
+          "strategy": "undo-stack",
+          "description": "All mutate steps are individually undoable. Undo in reverse order."
+        },
+        "steps": [
+          {
+            "id": "read_table",
+            "kind": "observe",
+            "description": "Determine the table's extent and column structure from the active sheet snapshot",
+            "reads_refs": ["sheet:${context.application_state.active_sheet}"],
+            "emits": ["sheet_name", "sheet_revision", "last_data_row", "has_header", "column_types"],
+            "predicate": "size(context.selection) > 0",
+            "on": {
+              "success": "decide_has_numeric_columns",
+              "failure": "abort_no_selection"
+            }
+          },
+          {
+            "id": "decide_has_numeric_columns",
+            "kind": "decide",
+            "description": "Check that at least one target column contains numeric data",
+            "predicate": "[\"C\",\"D\",\"E\",\"F\"].exists(col, steps.read_table.column_types[col] == \"number\" || steps.read_table.column_types[col] == \"formula\")",
+            "on_true": "insert_summary_row",
+            "on_false": "abort_no_numeric_columns"
+          },
+          {
+            "id": "insert_summary_row",
+            "kind": "mutate",
+            "description": "Insert a new row immediately after the last data row",
+            "action": "insert_row",
+            "inputs": {
+              "sheet": "${steps.read_table.sheet_name}",
+              "before_row": "${steps.read_table.last_data_row + 1}",
+              "count": 1
+            },
+            "expected_revisions": [
+              {
+                "entity_type": "sheet",
+                "ref": "sheet:${steps.read_table.sheet_name}",
+                "revision": "${steps.read_table.sheet_revision}"
+              }
+            ],
+            "writes_refs": ["sheet:${steps.read_table.sheet_name}"],
+            "emits": ["summary_row_number"],
+            "on": {
+              "success": "write_formulas",
+              "failure": "abort_insert_failed",
+              "stale_revision": "refresh_context"
+            }
+          },
+          {
+            "id": "write_formulas",
+            "kind": "subflow",
+            "description": "Write SUM formulas for each numeric column in the target range",
+            "workflow_ref": "write_single_sum",
+            "foreach": "[\"C\",\"D\",\"E\",\"F\"].filter(col, steps.read_table.column_types[col] == \"number\" || steps.read_table.column_types[col] == \"formula\")",
+            "inputs": {
+              "sheet": "${steps.read_table.sheet_name}",
+              "column": "${current}",
+              "header_row": 1,
+              "last_data_row": "${steps.read_table.last_data_row}",
+              "summary_row": "${steps.insert_summary_row.summary_row_number}"
+            },
+            "continue_on_error": false,
+            "on": {
+              "success": "apply_formatting",
+              "partial": "apply_formatting",
+              "failure": "abort_formula_failed",
+              "stale_revision": "refresh_context"
+            }
+          },
+          {
+            "id": "apply_formatting",
+            "kind": "mutate",
+            "description": "Bold the summary row and add a top border",
+            "action": "format_cells",
+            "inputs": {
+              "sheet": "${steps.read_table.sheet_name}",
+              "range": "A${steps.insert_summary_row.summary_row_number}:F${steps.insert_summary_row.summary_row_number}",
+              "format": {
+                "bold": true,
+                "border_top": "thin"
+              }
+            },
+            "writes_refs": ["cell:A${steps.insert_summary_row.summary_row_number}:F${steps.insert_summary_row.summary_row_number}"],
+            "on": {
+              "success": "decide_add_label",
+              "failure": "end",
+              "stale_revision": "refresh_context"
+            }
+          },
+          {
+            "id": "decide_add_label",
+            "kind": "decide",
+            "description": "If column A contains text labels, add 'Total' to the summary row",
+            "predicate": "steps.read_table.column_types[\"A\"] == \"text\"",
+            "on_true": "add_label",
+            "on_false": "end"
+          },
+          {
+            "id": "add_label",
+            "kind": "mutate",
+            "description": "Write 'Total' in column A of the summary row",
+            "action": "set_cell_value",
+            "inputs": {
+              "sheet": "${steps.read_table.sheet_name}",
+              "address": "A${steps.insert_summary_row.summary_row_number}",
+              "value": "Total"
+            },
+            "writes_refs": ["cell:A${steps.insert_summary_row.summary_row_number}"],
+            "on": {
+              "success": "end",
+              "failure": "end",
+              "stale_revision": "end"
+            }
+          },
+          {
+            "id": "refresh_context",
+            "kind": "observe",
+            "description": "Re-read current state after a stale revision, bounded by max_context_refreshes",
+            "reads_refs": ["context_frame"],
+            "predicate": "workflow.context_refresh_count < workflow.max_context_refreshes",
+            "on": {
+              "success": "read_table",
+              "failure": "abort_too_many_refreshes"
+            }
+          },
+          {
+            "id": "abort_no_selection",
+            "kind": "observe",
+            "description": "Abort: no cell is selected",
+            "on": {
+              "success": "end",
+              "failure": "end"
+            }
+          },
+          {
+            "id": "abort_no_numeric_columns",
+            "kind": "observe",
+            "description": "Abort: no numeric columns found in target range",
+            "on": {
+              "success": "end",
+              "failure": "end"
+            }
+          },
+          {
+            "id": "abort_insert_failed",
+            "kind": "observe",
+            "description": "Abort: row insertion failed for non-revision reason",
+            "on": {
+              "success": "end",
+              "failure": "end"
+            }
+          },
+          {
+            "id": "abort_formula_failed",
+            "kind": "observe",
+            "description": "Abort: formula writing failed",
+            "on": {
+              "success": "end",
+              "failure": "end"
+            }
+          },
+          {
+            "id": "abort_too_many_refreshes",
+            "kind": "observe",
+            "description": "Abort: exceeded max context refresh retries",
+            "on": {
+              "success": "end",
+              "failure": "end"
+            }
+          }
+        ],
+        "subflows": [
+          {
+            "id": "write_single_sum",
+            "description": "Write a SUM formula in one column of the summary row",
+            "entry_point": "write_formula",
+            "inputs": [
+              { "name": "sheet", "type": "string", "required": true, "description": "Sheet name" },
+              { "name": "column", "type": "string", "required": true, "description": "Column letter" },
+              { "name": "header_row", "type": "integer", "required": true, "description": "Header row number" },
+              { "name": "last_data_row", "type": "integer", "required": true, "description": "Last data row number" },
+              { "name": "summary_row", "type": "integer", "required": true, "description": "Summary row number" }
+            ],
+            "steps": [
+              {
+                "id": "write_formula",
+                "kind": "mutate",
+                "description": "Write SUM formula for this column",
+                "action": "set_cell_value",
+                "inputs": {
+                  "sheet": "${inputs.sheet}",
+                  "address": "${inputs.column}${inputs.summary_row}",
+                  "value": "=SUM(${inputs.column}${inputs.header_row + 1}:${inputs.column}${inputs.last_data_row})"
+                },
+                "writes_refs": ["cell:${inputs.column}${inputs.summary_row}"],
+                "on": {
+                  "success": "end",
+                  "failure": "end",
+                  "stale_revision": "end"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
