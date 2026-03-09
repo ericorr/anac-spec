@@ -1,152 +1,231 @@
 # ANAC Spec
 
-This repository contains a working draft of the Agent-Native Application Contract (`ANAC`) plus supporting schema, examples, and validation tooling.
+ANAC is a working draft for an agent-facing application contract: a static manifest plus runtime payloads that let an orchestrator execute workflows with state, concurrency, and failure semantics instead of blind tool calling.
 
-## Repository Layout
+This repository contains three things:
 
-- [`ANAC-0.1.2.md`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/ANAC-0.1.2.md): current normative draft
-- [`schema/anac-core-0.1.2.schema.json`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/schema/anac-core-0.1.2.schema.json): JSON Schema for the static ANAC core manifest
-- [`schema/anac-context-frame-0.1.2.schema.json`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/schema/anac-context-frame-0.1.2.schema.json): draft runtime schema for emitted `context_frame` payloads
-- [`schema/anac-action-result-0.1.2.schema.json`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/schema/anac-action-result-0.1.2.schema.json): draft runtime schema for emitted `action_result` payloads
-- [`examples/example-sheetapp-0.1.2.json`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/examples/example-sheetapp-0.1.2.json): procedural spreadsheet example
-- [`examples/example-vectorforge-0.1.2.json`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/examples/example-vectorforge-0.1.2.json): spatial/creative-tool pressure test
-- [`examples/validate_examples.py`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/examples/validate_examples.py): schema-only validation for the bundled examples
-- [`scripts/anac_lint.py`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/scripts/anac_lint.py): semantic linting beyond JSON Schema
-- [`scripts/validate_runtime_demo.py`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/scripts/validate_runtime_demo.py): validates runtime payloads emitted by the toy executor
+- the normative draft: [`ANAC-0.1.2.md`](ANAC-0.1.2.md)
+- machine-validatable schemas for the static and runtime payloads in [`schema/`](schema)
+- executable examples plus validation tooling in [`examples/`](examples) and [`scripts/`](scripts)
 
-## What Exists Today
+## What This Repo Proves
 
-- `0.1.2` is the hardened spec draft focused on implementation clarity.
-- The JSON Schema validates manifest structure.
-- The semantic linter checks cross-reference integrity and basic workflow consistency.
-- The bundled examples are intended to be both schema-valid and lint-clean.
+The repo is no longer just a spec draft. It has an executable validation stack.
 
-## Validation
+```mermaid
+flowchart TD
+    A["Static manifest"] --> B["JSON Schema validation"]
+    B --> C["Semantic linting"]
+    C --> D["Runtime execution against mock adapters"]
+    D --> E["Runtime payload validation"]
+    E --> F["Scenario assertions in CI"]
+```
 
-Validate the bundled examples against the JSON Schema:
+Today that stack covers:
+
+- 2 adapters: `SheetApp`, `VectorForge`
+- 5 runtime scenarios:
+  - `SheetApp` happy path
+  - `SheetApp` stale revision recovered
+  - `SheetApp` stale revision exhausted
+  - `VectorForge` happy path
+  - `VectorForge` non-retryable `PERMISSION_DENIED`
+- 4 enforced layers:
+  - static manifest schema validation
+  - semantic linting beyond JSON Schema
+  - runtime payload validation for `context_frame`, `action_result`, and `outcome`
+  - scenario-level integration assertions
+
+## Quick Start
+
+Install the single Python dependency used by the validators:
+
+```bash
+python3 -m pip install jsonschema
+```
+
+Run the full local validation stack:
+
+```bash
+python3 examples/validate_examples.py
+python3 scripts/anac_lint.py --strict examples/*.json
+python3 scripts/validate_runtime_demo.py
+```
+
+Run the CI-equivalent entry points individually:
+
+```bash
+python3 scripts/anac_runtime_demo.py
+python3 scripts/anac_runtime_demo.py --manifest examples/example-vectorforge-0.1.2.json --workflow refresh_accessible_asset
+```
+
+## Repository Map
+
+- [`ANAC-0.1.2.md`](ANAC-0.1.2.md): current normative draft
+- [`schema/anac-core-0.1.2.schema.json`](schema/anac-core-0.1.2.schema.json): static manifest schema
+- [`schema/anac-context-frame-0.1.2.schema.json`](schema/anac-context-frame-0.1.2.schema.json): runtime `context_frame` schema
+- [`schema/anac-action-result-0.1.2.schema.json`](schema/anac-action-result-0.1.2.schema.json): runtime `action_result` schema
+- [`schema/anac-outcome-0.1.2.schema.json`](schema/anac-outcome-0.1.2.schema.json): runtime workflow `outcome` schema
+- [`examples/example-sheetapp-0.1.2.json`](examples/example-sheetapp-0.1.2.json): procedural spreadsheet example
+- [`examples/example-vectorforge-0.1.2.json`](examples/example-vectorforge-0.1.2.json): spatial/creative-tool example
+- [`examples/validate_examples.py`](examples/validate_examples.py): static schema validation
+- [`scripts/anac_lint.py`](scripts/anac_lint.py): semantic linting
+- [`scripts/anac_runtime_demo.py`](scripts/anac_runtime_demo.py): toy runtime executor with mock adapters
+- [`scripts/validate_runtime_demo.py`](scripts/validate_runtime_demo.py): runtime validation and scenario checks
+- [`.github/workflows/validate-anac.yml`](.github/workflows/validate-anac.yml): CI workflow
+
+## Runtime Contract
+
+The runtime demo emits three validated payload classes:
+
+- `context_frame`: what the orchestrator currently sees
+- `action_result`: what an action invocation returned
+- `outcome`: how the workflow terminated
+
+`outcome` is now formalized because it held across two adapters and three failure modes without needing new top-level fields.
+
+Current `outcome` fields:
+
+- `status`: `success` or `failure`
+- `disposition`: terminal mode such as `completed`, `completed_after_retry`, `failed_retry_exhausted`, or `failed_non_retryable`
+- `reason`: why the workflow stopped
+- `terminal_step`
+- `terminal_transition`
+- `last_error_code`
+- `context_refresh_count`
+- `stale_retry_count`
+
+The runtime result also includes an adapter-defined `artifacts` object. That is intentionally not standardized.
+
+- `SheetApp`: `summary_row`
+- `VectorForge`: `published_refs`, `group_position`, `applied_tokens`, `export_job`
+
+## Executable Concurrency Example
+
+The `SheetApp` workflow is the concrete concurrency proof in this repo. It uses optimistic concurrency, retries once state has been refreshed, and aborts cleanly when retries are exhausted.
+
+```mermaid
+flowchart TD
+    A["read_table"] --> B["insert_summary_row"]
+    B -->|"success"| C["write_formulas"]
+    B -->|"STALE_REVISION"| D["refresh_context"]
+    D -->|"context_refresh_count < max"| A
+    D -->|"max exceeded"| E["abort_too_many_refreshes"]
+    C --> F["read_summary_row_for_formatting"]
+    F --> G["apply_formatting"]
+    G --> H["read_label_target"]
+    H --> I["add_label"]
+    I --> J["end"]
+    E --> J
+```
+
+That loop is not hypothetical. It is exercised by:
+
+```bash
+python3 scripts/anac_runtime_demo.py --force-stale-step insert_summary_row --force-stale-count 1
+python3 scripts/anac_runtime_demo.py --force-stale-step insert_summary_row --force-stale-count 2
+```
+
+## Adapter Matrix
+
+### SheetApp
+
+Commands:
+
+```bash
+python3 scripts/anac_runtime_demo.py
+python3 scripts/anac_runtime_demo.py --force-stale-step insert_summary_row --force-stale-count 1
+python3 scripts/anac_runtime_demo.py --force-stale-step insert_summary_row --force-stale-count 2
+```
+
+Observed dispositions:
+
+- `completed`
+- `completed_after_retry`
+- `failed_retry_exhausted`
+
+### VectorForge
+
+Commands:
+
+```bash
+python3 scripts/anac_runtime_demo.py --manifest examples/example-vectorforge-0.1.2.json --workflow refresh_accessible_asset
+python3 scripts/anac_runtime_demo.py --manifest examples/example-vectorforge-0.1.2.json --workflow refresh_accessible_asset --deny-permission asset.publish
+```
+
+Observed dispositions:
+
+- `completed`
+- `failed_non_retryable`
+
+This adapter matters because it proves the runtime contract is not spreadsheet-specific:
+
+- it uses `confirm`
+- it uses `wait`
+- it fails for a non-concurrency reason
+- it keeps `context_refresh_count` and `stale_retry_count` at zero when those mechanisms are not involved
+
+## Validation Layers
+
+### 1. Static Schema Validation
 
 ```bash
 python3 examples/validate_examples.py
 ```
 
-Validate any manifest directly:
+Validates manifest structure against [`schema/anac-core-0.1.2.schema.json`](schema/anac-core-0.1.2.schema.json).
+
+### 2. Semantic Linting
 
 ```bash
-python3 - <<'PY'
-import json
-from pathlib import Path
-from jsonschema import validate
-
-schema = json.loads(Path("schema/anac-core-0.1.2.schema.json").read_text())
-manifest = json.loads(Path("examples/example-sheetapp-0.1.2.json").read_text())
-validate(instance=manifest, schema=schema)
-print("ok")
-PY
+python3 scripts/anac_lint.py --strict examples/*.json
 ```
 
-## Linting
+Checks what JSON Schema cannot express, including:
 
-Run semantic checks that the schema cannot express:
-
-```bash
-python3 scripts/anac_lint.py examples/example-sheetapp-0.1.2.json examples/example-vectorforge-0.1.2.json
-```
-
-Use `--strict` if you want warnings to fail the run:
-
-```bash
-python3 scripts/anac_lint.py --strict examples/example-sheetapp-0.1.2.json
-```
-
-The linter currently checks:
-
-- duplicate IDs across entities, actions, workflows, steps, and subflows
-- unknown entity, action, workflow, step, and step-output references
-- tier-level requirements that JSON Schema cannot express
-- `observe` steps that call mutating actions
-- revision handling on `mutate` steps
+- cross-reference integrity
+- workflow transition validity
+- tier-level requirements
+- revision handling
 - `watch_binding` and `workflow_ref` resolution
-- CEL symbol-scope sanity for predicates and interpolations
+- basic CEL scope sanity
 
-It does not yet do full CEL parsing or runtime simulation.
-
-## Toy Runtime Executor
-
-There is also a minimal runtime scaffold that can execute the bundled `SheetApp` and `VectorForge` manifests against in-memory adapters:
-
-```bash
-python3 scripts/anac_runtime_demo.py
-```
-
-This does three things:
-
-- loads a bundled manifest
-- runs the requested workflow against an in-memory mock adapter
-- prints a trace containing resolved inputs, step emissions, transitions, and action results
-
-The executor is intentionally small and incomplete. Its main purpose is to surface runtime contract needs empirically, especially:
-
-- how `observe` steps populate `emits`
-- what `context_frame` shape the orchestrator actually needs
-- how optimistic concurrency affects action calls and results
-
-The current demo supports enough CEL to run the bundled example, not the full language.
-
-The runtime payload now includes a top-level `outcome` object with:
-
-- `status`: coarse terminal status (`success` or `failure` in the current demo)
-- `disposition`: terminal mode such as `completed`, `completed_after_retry`, `failed_retry_exhausted`, or `failed_non_retryable`
-- `reason`: why the workflow stopped
-- `terminal_step` and `terminal_transition`
-- `last_error_code`
-- `context_refresh_count`
-- `stale_retry_count`
-
-There is also a top-level `artifacts` object carrying adapter-specific end-state summaries:
-
-- `SheetApp`: `summary_row`
-- `VectorForge`: `published_refs`, `group_position`, `applied_tokens`, `export_job`
-
-Force a deterministic stale-revision recovery path:
-
-```bash
-python3 scripts/anac_runtime_demo.py --force-stale-step insert_summary_row --force-stale-count 1
-```
-
-Force a deterministic stale-revision exhaustion path that exceeds `max_context_refreshes`:
-
-```bash
-python3 scripts/anac_runtime_demo.py --force-stale-step insert_summary_row --force-stale-count 2
-```
-
-Run the `VectorForge` happy path:
-
-```bash
-python3 scripts/anac_runtime_demo.py --manifest examples/example-vectorforge-0.1.2.json --workflow refresh_accessible_asset
-```
-
-Run the `VectorForge` non-retryable failure path by removing publish permission:
-
-```bash
-python3 scripts/anac_runtime_demo.py --manifest examples/example-vectorforge-0.1.2.json --workflow refresh_accessible_asset --deny-permission asset.publish
-```
-
-Validate the runtime payloads against the draft runtime schemas:
+### 3. Runtime Payload Validation
 
 ```bash
 python3 scripts/validate_runtime_demo.py
 ```
 
-The runtime validator now covers five scenarios:
+Validates emitted runtime payloads against:
 
-- `SheetApp` happy path
-- `SheetApp` recovered stale revision
-- `SheetApp` exhausted stale revision retries
-- `VectorForge` happy path
-- `VectorForge` non-retryable `PERMISSION_DENIED` failure
+- [`schema/anac-context-frame-0.1.2.schema.json`](schema/anac-context-frame-0.1.2.schema.json)
+- [`schema/anac-action-result-0.1.2.schema.json`](schema/anac-action-result-0.1.2.schema.json)
+- [`schema/anac-outcome-0.1.2.schema.json`](schema/anac-outcome-0.1.2.schema.json)
 
-## Notes
+### 4. CI
 
-- This repo currently emphasizes the normative/spec side, not the higher-level position paper.
-- The `outcome` object remains executor-derived metadata rather than a formal schema. The second adapter is there to test whether the current shape generalizes before formalizing it.
-- Research citations from earlier drafts still need a separate verification pass before wider circulation.
+GitHub Actions runs the same checks on pushes to `main`, pull requests, and manual dispatch.
+
+See [`.github/workflows/validate-anac.yml`](.github/workflows/validate-anac.yml).
+
+## Current Boundaries
+
+What this repo does well now:
+
+- validates the static contract
+- validates semantic consistency beyond the static schema
+- executes real workflow traces against multiple adapters
+- validates runtime payloads and scenario outcomes
+
+What it does not do yet:
+
+- full CEL parsing or static type-checking
+- a formal schema for the entire top-level runtime envelope
+- adapter-independent semantics for `artifacts`
+- citation verification for the research references in earlier drafts
+
+## Next Useful Work
+
+- add a third adapter or scenario that fails asynchronously inside `wait`
+- formalize the top-level runtime envelope if a second executor implementation converges on the same shape
+- split a shorter positioning document out from the normative draft

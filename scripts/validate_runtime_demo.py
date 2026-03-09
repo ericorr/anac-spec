@@ -15,6 +15,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 RUNTIME_DEMO = ROOT_DIR / "scripts" / "anac_runtime_demo.py"
 CONTEXT_SCHEMA_PATH = ROOT_DIR / "schema" / "anac-context-frame-0.1.2.schema.json"
 ACTION_SCHEMA_PATH = ROOT_DIR / "schema" / "anac-action-result-0.1.2.schema.json"
+OUTCOME_SCHEMA_PATH = ROOT_DIR / "schema" / "anac-outcome-0.1.2.schema.json"
 VECTOR_MANIFEST = ROOT_DIR / "examples" / "example-vectorforge-0.1.2.json"
 
 
@@ -44,6 +45,7 @@ def action_errors(payload: dict) -> list[str]:
 def main() -> int:
     context_validator = Draft202012Validator(load_json(CONTEXT_SCHEMA_PATH))
     action_validator = Draft202012Validator(load_json(ACTION_SCHEMA_PATH))
+    outcome_validator = Draft202012Validator(load_json(OUTCOME_SCHEMA_PATH))
 
     scenarios = [
         ("sheet_happy", []),
@@ -77,6 +79,7 @@ def main() -> int:
         print(f"  trace steps: {len(payload['trace'])}")
 
         all_errors.extend(validate_instance(context_validator, payload["final_context_frame"], f"{name}:final_context_frame"))
+        all_errors.extend(validate_instance(outcome_validator, payload["outcome"], f"{name}:outcome"))
 
         action_results = []
         for index, entry in enumerate(payload["trace"]):

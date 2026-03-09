@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/anac/schema/anac-outcome-0.1.2.schema.json",
+  "title": "ANAC Workflow Outcome 0.1.2",
+  "description": "Terminal workflow outcome emitted by the toy ANAC runtime executor.",
+  "type": "object",
+  "required": [
+    "status",
+    "disposition",
+    "reason",
+    "terminal_step",
+    "terminal_transition",
+    "last_error_code",
+    "context_refresh_count",
+    "stale_retry_count"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["success", "failure"]
+    },
+    "disposition": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "completed_after_retry",
+        "failed_retry_exhausted",
+        "failed_non_retryable",
+        "failed_retryable",
+        "failed_timeout",
+        "cancelled_by_user"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "workflow_reached_end",
+        "workflow_reached_end_after_retry",
+        "max_context_refreshes_exceeded",
+        "action_failure",
+        "wait_timeout",
+        "confirmation_rejected",
+        "watched_entity_failed"
+      ]
+    },
+    "terminal_step": {
+      "type": "string",
+      "minLength": 1
+    },
+    "terminal_transition": {
+      "type": "string",
+      "minLength": 1
+    },
+    "last_error_code": {
+      "type": ["string", "null"]
+    },
+    "context_refresh_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "stale_retry_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": { "const": "success" }
+        }
+      },
+      "then": {
+        "properties": {
+          "disposition": {
+            "enum": ["completed", "completed_after_retry"]
+          },
+          "reason": {
+            "enum": ["workflow_reached_end", "workflow_reached_end_after_retry"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": { "const": "failure" }
+        }
+      },
+      "then": {
+        "properties": {
+          "disposition": {
+            "enum": [
+              "failed_retry_exhausted",
+              "failed_non_retryable",
+              "failed_retryable",
+              "failed_timeout",
+              "cancelled_by_user"
+            ]
+          },
+          "reason": {
+            "enum": [
+              "max_context_refreshes_exceeded",
+              "action_failure",
+              "wait_timeout",
+              "confirmation_rejected",
+              "watched_entity_failed"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "disposition": { "const": "completed" }
+        }
+      },
+      "then": {
+        "properties": {
+          "reason": { "const": "workflow_reached_end" },
+          "last_error_code": { "type": "null" },
+          "context_refresh_count": { "const": 0 },
+          "stale_retry_count": { "const": 0 }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "disposition": { "const": "completed_after_retry" }
+        }
+      },
+      "then": {
+        "properties": {
+          "reason": { "const": "workflow_reached_end_after_retry" },
+          "last_error_code": { "type": "string" },
+          "context_refresh_count": { "type": "integer", "minimum": 1 },
+          "stale_retry_count": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "disposition": { "const": "failed_retry_exhausted" }
+        }
+      },
+      "then": {
+        "properties": {
+          "reason": { "const": "max_context_refreshes_exceeded" },
+          "last_error_code": { "type": "string" },
+          "context_refresh_count": { "type": "integer", "minimum": 1 },
+          "stale_retry_count": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "disposition": { "const": "failed_non_retryable" }
+        }
+      },
+      "then": {
+        "properties": {
+          "reason": { "const": "action_failure" },
+          "last_error_code": { "type": "string" },
+          "stale_retry_count": { "const": 0 }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "disposition": { "const": "failed_timeout" }
+        }
+      },
+      "then": {
+        "properties": {
+          "reason": { "const": "wait_timeout" },
+          "last_error_code": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "disposition": { "const": "cancelled_by_user" }
+        }
+      },
+      "then": {
+        "properties": {
+          "reason": { "const": "confirmation_rejected" },
+          "last_error_code": { "type": "null" }
+        }
+      }
+    }
+  ]
+}
