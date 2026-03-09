@@ -413,6 +413,7 @@ class MockSheetAppAdapter:
 
     def invoke_action(
         self,
+        step_id: str,
         action_id: str,
         params: dict[str, Any],
         expected_revisions: list[dict[str, Any]],
@@ -425,6 +426,64 @@ class MockSheetAppAdapter:
         if action_id == "format_cells":
             return self._format_cells(params, expected_revisions)
         raise KeyError(f"Unsupported action: {action_id}")
+
+    def simulate_external_change(self, step_id: str, expected_revisions: list[dict[str, Any]]) -> dict[str, Any]:
+        """Mutate underlying state without updating the current frame to force stale revisions."""
+        event = {
+            "kind": "simulated_external_edit",
+            "step_id": step_id,
+            "timestamp": iso_now(),
+            "mutated": [],
+        }
+        if not expected_revisions:
+            return event
+
+        first = expected_revisions[0]
+        ref = first["ref"]
+        if ref.startswith("sheet:"):
+            target = "D14"
+            self.cells[target]["data"]["value"] += 1
+            self.cells[target]["revision"] = self._next_revision()
+            event["mutated"].append(
+                {
+                    "entity_type": "cell",
+                    "ref": f"cell:{target}",
+                    "revision": self.cells[target]["revision"],
+                    "note": "Incremented a sales value to simulate a concurrent user edit",
+                }
+            )
+            self._bump_sheet_revision()
+            event["mutated"].append(
+                {
+                    "entity_type": "sheet",
+                    "ref": ref,
+                    "revision": self.sheet_revision,
+                    "note": "Bumped sheet revision after concurrent edit",
+                }
+            )
+            return event
+
+        if ref.startswith("cell:"):
+            address = ref.split(":", 1)[1]
+            cell = self.cells[address]
+            if isinstance(cell["data"]["value"], (int, float)):
+                cell["data"]["value"] += 1
+            elif cell["data"]["value"] is None:
+                cell["data"]["value"] = "external-edit"
+            else:
+                cell["data"]["value"] = f"{cell['data']['value']}*"
+            cell["revision"] = self._next_revision()
+            event["mutated"].append(
+                {
+                    "entity_type": "cell",
+                    "ref": ref,
+                    "revision": cell["revision"],
+                    "note": "Mutated cell to invalidate expected revision",
+                }
+            )
+            return event
+
+        raise KeyError(f"Unsupported simulated ref: {ref}")
 
     def _check_expected_revisions(self, expected_revisions: list[dict[str, Any]]) -> list[dict[str, Any]]:
         stale: list[dict[str, Any]] = []
@@ -608,10 +667,12 @@ class MockSheetAppAdapter:
 class WorkflowExecutor:
     """Tiny state-machine executor for the bundled demo manifest."""
 
-    def __init__(self, manifest: dict[str, Any], adapter: MockSheetAppAdapter) -> None:
+    def __init__(self, manifest: dict[str, Any], adapter: MockSheetAppAdapter, force_stale_step: str | None = None) -> None:
         self.manifest = manifest
         self.adapter = adapter
         self.actions = {action["id"]: action for action in manifest["static"]["actions"]}
+        self.force_stale_step = force_stale_step
+        self._forced_once: set[str] = set()
 
     def run(self, workflow_id: str) -> dict[str, Any]:
         workflow = next(item for item in self.manifest["static"]["workflows"] if item["id"] == workflow_id)
@@ -685,7 +746,11 @@ class WorkflowExecutor:
                 step_result = None
 
             elif step["kind"] == "mutate":
-                execution = self.adapter.invoke_action(step["action"], resolved_inputs, resolved_expected, context_frame)
+                simulated_event = None
+                if self.force_stale_step == step_id and step_id not in self._forced_once:
+                    simulated_event = self.adapter.simulate_external_change(step_id, resolved_expected)
+                    self._forced_once.add(step_id)
+                execution = self.adapter.invoke_action(step_id, step["action"], resolved_inputs, resolved_expected, context_frame)
                 step_result = execution.result
                 local_outputs[step_id] = {
                     **unwrap(step_result.get("data", {})),
@@ -762,6 +827,7 @@ class WorkflowExecutor:
                     "expected_revisions": resolved_expected,
                     "emissions": local_outputs.get(step_id, {}),
                     "action_result": step_result,
+                    "simulated_external_event": simulated_event if step["kind"] == "mutate" else None,
                     "frame_id": context_frame["frame_id"],
                     "next_step": next_step,
                 }
@@ -802,6 +868,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--manifest", default=str(DEFAULT_MANIFEST), help="Path to the ANAC manifest to execute")
     parser.add_argument("--workflow", default="add_summary_row", help="Workflow id to execute")
     parser.add_argument("--trace-only", action="store_true", help="Print only the step trace")
+    parser.add_argument(
+        "--force-stale-step",
+        help="Inject one concurrent external edit before the named mutate step executes",
+    )
     return parser.parse_args()
 
 
@@ -809,7 +879,7 @@ def main() -> int:
     args = parse_args()
     manifest = load_manifest(Path(args.manifest))
     adapter = MockSheetAppAdapter()
-    executor = WorkflowExecutor(manifest, adapter)
+    executor = WorkflowExecutor(manifest, adapter, force_stale_step=args.force_stale_step)
     result = executor.run(args.workflow)
     payload = result["trace"] if args.trace_only else result
     json.dump(payload, sys.stdout, indent=2)

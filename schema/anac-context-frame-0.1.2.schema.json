@@ -1,0 +1,329 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/anac/schema/anac-context-frame-0.1.2.schema.json",
+  "title": "ANAC Context Frame 0.1.2",
+  "type": "object",
+  "required": [
+    "frame_id",
+    "emitted_at",
+    "trigger",
+    "subscription_id",
+    "scope",
+    "application_state",
+    "selection",
+    "permissions",
+    "available_actions"
+  ],
+  "properties": {
+    "frame_id": {
+      "type": "string"
+    },
+    "emitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "trigger": {
+      "type": "string"
+    },
+    "subscription_id": {
+      "type": "string"
+    },
+    "scope": {
+      "$ref": "#/$defs/ContextScope"
+    },
+    "application_state": {
+      "$ref": "#/$defs/ApplicationState"
+    },
+    "selection": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/EntityRevisionRef"
+      }
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "available_actions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ScopedAction"
+      }
+    },
+    "active_workflows": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/WorkflowRuntime"
+      }
+    },
+    "entity_snapshots": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/EntitySnapshot"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Warning"
+      }
+    },
+    "recent_events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Event"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "EntityRevisionRef": {
+      "type": "object",
+      "required": [
+        "entity_type",
+        "ref",
+        "revision"
+      ],
+      "properties": {
+        "entity_type": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ContextScope": {
+      "type": "object",
+      "required": [
+        "mode",
+        "root_refs",
+        "entity_count",
+        "truncated",
+        "next_cursor"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "default",
+            "selection",
+            "workflow",
+            "explicit"
+          ]
+        },
+        "root_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "entity_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ApplicationState": {
+      "type": "object",
+      "required": [
+        "screen",
+        "mode"
+      ],
+      "properties": {
+        "screen": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "ScopedAction": {
+      "type": "object",
+      "required": [
+        "action_id",
+        "relevance",
+        "reason",
+        "preconditions_met"
+      ],
+      "properties": {
+        "action_id": {
+          "type": "string"
+        },
+        "relevance": {
+          "type": "string",
+          "enum": [
+            "primary",
+            "secondary",
+            "available"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "preconditions_met": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "WorkflowRuntime": {
+      "type": "object",
+      "required": [
+        "workflow_id",
+        "lease_id",
+        "current_step",
+        "progress",
+        "can_rollback",
+        "context_refresh_count"
+      ],
+      "properties": {
+        "workflow_id": {
+          "type": "string"
+        },
+        "lease_id": {
+          "type": "string"
+        },
+        "current_step": {
+          "type": "string"
+        },
+        "progress": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "next_action_hint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "can_rollback": {
+          "type": "boolean"
+        },
+        "context_refresh_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "EntitySnapshot": {
+      "type": "object",
+      "required": [
+        "entity_type",
+        "ref",
+        "revision",
+        "data"
+      ],
+      "properties": {
+        "entity_type": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Warning": {
+      "type": "object",
+      "required": [
+        "severity",
+        "message"
+      ],
+      "properties": {
+        "severity": {
+          "type": "string",
+          "enum": [
+            "info",
+            "warning",
+            "error"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "related_entity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntityRevisionRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "suggested_action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Event": {
+      "type": "object",
+      "required": [
+        "timestamp",
+        "actor",
+        "summary"
+      ],
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "actor": {
+          "type": "string",
+          "enum": [
+            "user",
+            "agent",
+            "system"
+          ]
+        },
+        "action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "result": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

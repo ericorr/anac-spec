@@ -37,3 +37,6 @@ jobs:
 
       - name: Run semantic linter
         run: python scripts/anac_lint.py --strict examples/*.json
+
+      - name: Validate runtime demo payloads
+        run: python scripts/validate_runtime_demo.py

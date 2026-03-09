@@ -6,10 +6,13 @@ This repository contains a working draft of the Agent-Native Application Contrac
 
 - [`ANAC-0.1.2.md`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/ANAC-0.1.2.md): current normative draft
 - [`schema/anac-core-0.1.2.schema.json`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/schema/anac-core-0.1.2.schema.json): JSON Schema for the static ANAC core manifest
+- [`schema/anac-context-frame-0.1.2.schema.json`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/schema/anac-context-frame-0.1.2.schema.json): draft runtime schema for emitted `context_frame` payloads
+- [`schema/anac-action-result-0.1.2.schema.json`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/schema/anac-action-result-0.1.2.schema.json): draft runtime schema for emitted `action_result` payloads
 - [`examples/example-sheetapp-0.1.2.json`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/examples/example-sheetapp-0.1.2.json): procedural spreadsheet example
 - [`examples/example-vectorforge-0.1.2.json`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/examples/example-vectorforge-0.1.2.json): spatial/creative-tool pressure test
 - [`examples/validate_examples.py`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/examples/validate_examples.py): schema-only validation for the bundled examples
 - [`scripts/anac_lint.py`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/scripts/anac_lint.py): semantic linting beyond JSON Schema
+- [`scripts/validate_runtime_demo.py`](/Users/ericorr/Documents/Legal%20LLM%20AWS/FunStuff/scripts/validate_runtime_demo.py): validates runtime payloads emitted by the toy executor
 
 ## What Exists Today
 
@@ -88,6 +91,18 @@ The executor is intentionally small and incomplete. Its main purpose is to surfa
 - how optimistic concurrency affects action calls and results
 
 The current demo supports enough CEL to run the bundled example, not the full language.
+
+Force a deterministic stale-revision recovery path:
+
+```bash
+python3 scripts/anac_runtime_demo.py --force-stale-step insert_summary_row
+```
+
+Validate the happy-path and stale-path runtime payloads against the draft runtime schemas:
+
+```bash
+python3 scripts/validate_runtime_demo.py
+```
 
 ## Notes
 

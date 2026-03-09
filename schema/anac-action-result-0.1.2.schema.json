@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/anac/schema/anac-action-result-0.1.2.schema.json",
+  "title": "ANAC Action Result 0.1.2",
+  "type": "object",
+  "required": [
+    "action_id",
+    "status",
+    "timestamp",
+    "warnings",
+    "undo_token"
+  ],
+  "properties": {
+    "action_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "success",
+        "partial",
+        "failure",
+        "pending"
+      ]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "data": {
+      "type": "object"
+    },
+    "state_delta": {
+      "type": "object",
+      "properties": {
+        "created": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StateDeltaEntity"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StateDeltaEntity"
+          }
+        },
+        "deleted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StateDeltaEntity"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "user_visible_effect": {
+      "type": "string"
+    },
+    "error": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "retryable",
+        "recovery_options",
+        "stale_entities"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "recovery_options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RecoveryOption"
+          }
+        },
+        "stale_entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EntityRevisionRef"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "undo_token": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "StateDeltaEntity": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/EntityRevisionRef"
+        },
+        {
+          "$ref": "#/$defs/EntitySnapshot"
+        }
+      ]
+    },
+    "EntityRevisionRef": {
+      "type": "object",
+      "required": [
+        "entity_type",
+        "ref",
+        "revision"
+      ],
+      "properties": {
+        "entity_type": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "EntitySnapshot": {
+      "type": "object",
+      "required": [
+        "entity_type",
+        "ref",
+        "revision",
+        "data"
+      ],
+      "properties": {
+        "entity_type": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "RecoveryOption": {
+      "type": "object",
+      "required": [
+        "action_id",
+        "description"
+      ],
+      "properties": {
+        "action_id": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
