@@ -15,6 +15,8 @@ The repo includes a spreadsheet example where a workflow adds a summary row. It 
   "status": "failure",
   "disposition": "failed_retry_exhausted",
   "reason": "max_context_refreshes_exceeded",
+  "terminal_step": "refresh_context",
+  "terminal_transition": "failure",
   "last_error_code": "STALE_REVISION",
   "context_refresh_count": 2,
   "stale_retry_count": 2
@@ -32,10 +34,12 @@ This is not just a schema file. The repo has four enforcement layers:
 
 The outcome schema survived both adapters without modification, which is why it was formalized.
 
-There is also a live Google Sheets adapter that runs the same workflow against a real spreadsheet via the Sheets and Drive APIs. The captured traces are committed in the repo:
+There is also a live Google Sheets adapter that runs the same workflow against a real spreadsheet via the Sheets and Drive APIs. The captured live runs are committed in the repo:
 
-- Happy path: [docs/traces/google-sheets-live-happy-20260309T212638Z.json](traces/google-sheets-live-happy-20260309T212638Z.json)
-- Stale recovery: [docs/traces/google-sheets-live-stale-recovered-20260309T212715Z.json](traces/google-sheets-live-stale-recovered-20260309T212715Z.json)
+- Happy path: https://github.com/ericorr/anac-spec/blob/main/docs/traces/google-sheets-live-happy-20260309T212638Z.json
+- Forced-stale live run: https://github.com/ericorr/anac-spec/blob/main/docs/traces/google-sheets-live-stale-recovered-20260309T212715Z.json
+
+Those traces show the adapter running against a real API-backed spreadsheet. The retry loop itself is exercised and validated in the mock scenarios.
 
 The quickest way through the repo:
 

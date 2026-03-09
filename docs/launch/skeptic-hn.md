@@ -1,10 +1,4 @@
-# Skeptic-Proof HN Draft
-
-Suggested title:
-
-`Show HN: ANAC – State machines and concurrency control for AI agent-application integration`
-
-Draft text:
+Show HN: ANAC – State machines and concurrency control for AI agent-application integration
 
 AI agents can call functions. They cannot track state across a multi-step workflow, detect concurrent edits, or follow application-defined recovery paths. Those are different problems, and function lists do not solve them.
 
@@ -19,7 +13,11 @@ I will skip the philosophy and show you what it does.
   "status": "failure",
   "disposition": "failed_retry_exhausted",
   "reason": "max_context_refreshes_exceeded",
-  "last_error_code": "STALE_REVISION"
+  "terminal_step": "refresh_context",
+  "terminal_transition": "failure",
+  "last_error_code": "STALE_REVISION",
+  "context_refresh_count": 2,
+  "stale_retry_count": 2
 }
 ```
 
@@ -31,9 +29,11 @@ The agent did not improvise this. The manifest declared the recovery path. The e
 - A semantic linter that checks transition targets, revision-tracking consistency, and reference resolution
 - Runtime payload validation for context frames, action results, and workflow outcomes
 - Five integration scenarios across two adapters (spreadsheet + design tool), covering normal completion, stale recovery, retry exhaustion, non-retryable failure, and async wait
-- A live Google Sheets adapter that runs the same workflow against a real spreadsheet, with committed trace artifacts
+- A live Google Sheets adapter that runs the same workflow against a real spreadsheet, with committed trace artifacts proving the adapter against a real API-backed app
 
 The outcome schema was left informal until a second adapter confirmed the shape. It held. That is when it was formalized.
+
+The retry loop itself is exercised in the mock scenarios. The live traces prove the adapter path, not a successful recovery branch.
 
 **Run it yourself:**
 

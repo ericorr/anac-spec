@@ -1,10 +1,4 @@
-# Blog Post Draft
-
-Suggested title:
-
-`The Missing Layer Between AI Agents and Real Software`
-
-Draft text:
+The Missing Layer Between AI Agents and Real Software
 
 AI agents can call tools. They cannot use software.
 
@@ -36,7 +30,20 @@ The most common failure mode for agents operating on real software is silent dat
 
 ANAC prevents this with optimistic concurrency control at the workflow level. When an agent reads an entity, the context frame includes a revision identifier. When it writes, the action checks the expected revision against the current revision. If they diverge, the action returns `STALE_REVISION` and the workflow follows its declared recovery path: re-read, re-evaluate, retry.
 
-This is not theoretical. The ANAC repository includes a spreadsheet workflow that exercises this exact loop against both a mock adapter and a live Google Sheets integration. When a concurrent edit happens between the read and write steps, the executor detects it, follows the manifest's recovery transition, re-reads the sheet, and retries. If retries are exhausted, the workflow terminates with a structured outcome that tells the orchestrator exactly what happened and why.
+This is not theoretical. The ANAC repository includes a spreadsheet workflow that exercises this exact loop in the mock runtime, where the executor detects the stale write, follows the manifest's recovery transition, re-reads the sheet, and retries. If retries are exhausted, the workflow terminates with a structured outcome that tells the orchestrator exactly what happened and why:
+
+```json
+{
+  "status": "failure",
+  "disposition": "failed_retry_exhausted",
+  "reason": "max_context_refreshes_exceeded",
+  "terminal_step": "refresh_context",
+  "terminal_transition": "failure",
+  "last_error_code": "STALE_REVISION",
+  "context_refresh_count": 2,
+  "stale_retry_count": 2
+}
+```
 
 The agent did not invent this recovery behavior. The manifest defined it. The executor followed it.
 
@@ -48,7 +55,7 @@ The repository at [github.com/ericorr/anac-spec](https://github.com/ericorr/anac
 
 The outcome schema was deliberately left informal until a second adapter confirmed the shape. A spreadsheet adapter (SheetApp) and a design-tool adapter (VectorForge) exercise different workflow structures and different failure modes — stale revisions, retry exhaustion, and non-retryable permission errors. The same outcome shape held across both, which is when it was formalized.
 
-A live Google Sheets adapter runs the same workflow against a real spreadsheet via the Sheets and Drive APIs, with captured traces committed in the repository.
+A live Google Sheets adapter runs the same workflow against a real spreadsheet via the Sheets and Drive APIs, with captured traces committed in the repository. Those live traces prove the adapter against a real API-backed application. The retry loop itself is currently demonstrated by the mock scenarios rather than the live trace artifacts.
 
 ## The LSP analogy
 
