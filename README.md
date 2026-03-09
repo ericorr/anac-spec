@@ -5,6 +5,7 @@ ANAC is a working draft for an agent-facing application contract: a static manif
 This repository contains three things:
 
 - the normative draft: [`ANAC-0.1.2.md`](ANAC-0.1.2.md)
+- the builder-facing overview: [`docs/positioning.md`](docs/positioning.md)
 - machine-validatable schemas for the static and runtime payloads in [`schema/`](schema)
 - executable examples plus validation tooling in [`examples/`](examples) and [`scripts/`](scripts)
 
@@ -62,6 +63,7 @@ python3 scripts/anac_runtime_demo.py --manifest examples/example-vectorforge-0.1
 ## Repository Map
 
 - [`ANAC-0.1.2.md`](ANAC-0.1.2.md): current normative draft
+- [`docs/positioning.md`](docs/positioning.md): builder-facing positioning document
 - [`schema/anac-core-0.1.2.schema.json`](schema/anac-core-0.1.2.schema.json): static manifest schema
 - [`schema/anac-context-frame-0.1.2.schema.json`](schema/anac-context-frame-0.1.2.schema.json): runtime `context_frame` schema
 - [`schema/anac-action-result-0.1.2.schema.json`](schema/anac-action-result-0.1.2.schema.json): runtime `action_result` schema
